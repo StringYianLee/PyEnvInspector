@@ -264,13 +264,18 @@ def _sha256_of(path: str) -> str:
 # Python 解释器: 安装 / 删除
 # ---------------------------------------------------------------------------
 
-def install_python(version: str, on_output=None, target_dir: str | None = None,
-                   add_to_path: bool = False) -> str:
+def install_python(version: str, target_dir: str | None = None,
+                   add_to_path: bool = False, on_output=None) -> str:
     """安装指定版本的 Python, 返回解释器安装目录。
 
+    :param version: 可安装版本号(3.9-3.13)
     :param target_dir: 自定义安装目录(None = 默认 ~/PyEnvInspector/runtimes/py-<版本>);
                        必须是不存在的目录或空目录
     :param add_to_path: 是否把解释器目录与 Scripts 目录追加到用户级 Path 环境变量
+    :param on_output: 输出回调 —— **约定: 全部管理函数的 on_output 均位于
+                      参数列表末尾**, UI 按 (业务参数..., on_output=) 位置传参;
+                      此前 on_output 位于第二位, 与 UI 的位置传参错位导致
+                      TypeError: multiple values for argument 'on_output'
     步骤: 校验 → 多镜像下载 tar.gz → sha256 校验 → 解压 → 写托管标记+登记 → (可选)写 Path
     """
     if on_output is None:

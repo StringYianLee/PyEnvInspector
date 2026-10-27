@@ -248,6 +248,36 @@ def test_install_python_empty_target_dir_allows_install(monkeypatch, tmp_path):
     assert not any(empty.iterdir()) or not empty.exists()
 
 
+def test_install_python_ui_positional_call_regression(monkeypatch, tmp_path):
+    """UI 调用链回归: 管理页按位置传 (version, target_dir, add_to_path) +
+    关键字 on_output。若签名错位会抛 TypeError: multiple values for
+    argument 'on_output'(v1.1.2 线上 bug)。"""
+    monkeypatch.setattr(em, "get_runtimes_dir", lambda: str(tmp_path / "runtimes"))
+    monkeypatch.setattr(
+        em, "_download_with_mirrors",
+        lambda *a, **k: (_ for _ in ()).throw(em.EnvManagerError("模拟下载失败")))
+    target = str(tmp_path / "ui-target")
+    captured = {}
+
+    # 完全复刻 ManageWorker.run 的调用形态: fn(*args, on_output=...)
+    try:
+        em.install_python("3.9", target, True,
+                          on_output=lambda m: captured.setdefault("out", []).append(m))
+        raise AssertionError("应抛出模拟下载错误")
+    except em.EnvManagerError as ei:
+        # 走到了下载 = 版本/路径/勾选三个位置参数全部正确落到形参
+        assert "模拟下载失败" in str(ei)
+        assert captured["out"], "on_output 回调应生效"
+    except TypeError as exc:
+        raise AssertionError(f"签名与 UI 调用错位: {exc}")
+
+    # 签名结构断言: on_output 必须在末尾(ManageWorker 约定)
+    import inspect
+    sig = inspect.signature(em.install_python)
+    names = list(sig.parameters)
+    assert names == ["version", "target_dir", "add_to_path", "on_output"], names
+
+
 # ---------------------------------------------------------------------------
 # 登记表与自定义安装路径
 # ---------------------------------------------------------------------------
