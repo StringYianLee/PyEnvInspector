@@ -175,6 +175,19 @@ def scan_interpreters(progress=None) -> ScanReport:
             if re.fullmatch(r"python(\d+(\.\d+)?)?\.exe", base):
                 add(hit, "store")
 
+    # 7) PyEnv Inspector 托管解释器 ------------------------------------------
+    # 通过"管理"页安装的解释器位于用户自选目录(默认 ~/PyEnvInspector/runtimes),
+    # 不在 PATH/注册表/常见目录的覆盖范围内, 必须显式扫描,
+    # 否则安装完成后解释器页面永远不显示新装的解释器。
+    report("扫描 PyEnv Inspector 托管解释器…")
+    try:
+        from .env_manager import list_managed_interpreters
+        for item in list_managed_interpreters():
+            add(item["python_exe"], "managed",
+                tag=f"托管 {item.get('version', '')}".strip())
+    except Exception:
+        pass  # 托管扫描失败不阻塞其余渠道
+
     # ---- 逐个探测, 去重 -----------------------------------------------------
     report(f"共发现 {len(candidates)} 个候选路径, 逐一验证…")
     interpreters: list[InterpreterInfo] = []

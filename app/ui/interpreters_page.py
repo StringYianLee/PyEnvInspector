@@ -23,6 +23,7 @@ _SOURCE_COLORS = {
     "store": "#5a6acf",
     "common": "#5f6b83",
     "path": "#7c66c9",
+    "managed": "#2f8f5b",
 }
 
 

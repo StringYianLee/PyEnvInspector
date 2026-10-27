@@ -14,9 +14,9 @@ import os
 from PySide6.QtCore import Qt, Signal
 from PySide6.QtGui import QColor, QFont
 from PySide6.QtWidgets import (
-    QComboBox, QFrame, QHBoxLayout, QHeaderView, QLabel, QLineEdit,
-    QMessageBox, QPlainTextEdit, QPushButton, QSplitter, QTableWidget,
-    QTableWidgetItem, QTabWidget, QVBoxLayout, QWidget,
+    QCheckBox, QComboBox, QFileDialog, QFrame, QHBoxLayout, QHeaderView,
+    QLabel, QLineEdit, QMessageBox, QPlainTextEdit, QPushButton, QSplitter,
+    QTableWidget, QTableWidgetItem, QTabWidget, QVBoxLayout, QWidget,
 )
 
 from ..core import env_manager as em
@@ -101,7 +101,7 @@ class ManagePage(QWidget):
         layout.setContentsMargins(0, 8, 0, 0)
         layout.setSpacing(10)
 
-        hint = QLabel("仅显示由本工具安装的解释器(位于 ~/PyEnvInspector/runtimes); "
+        hint = QLabel("仅显示由本工具安装的解释器(登记于 ~/PyEnvInspector); "
                       "外部解释器不受本页管理。安装过程自动下载并校验 sha256。")
         hint.setWordWrap(True)
         hint.setStyleSheet(f"color: {Palette.text_muted}; font-size: 12px;")
@@ -129,8 +129,28 @@ class ManagePage(QWidget):
         row.addStretch(1)
         layout.addLayout(row)
 
-        self.py_table = QTableWidget(0, 3)
-        self.py_table.setHorizontalHeaderLabels(["版本", "安装目录", "安装时间"])
+        # 自定义安装路径 + Path 勾选
+        row2 = QHBoxLayout()
+        row2.setSpacing(10)
+        row2.addWidget(QLabel("安装路径:"))
+        self.py_dir_edit = QLineEdit()
+        self.py_dir_edit.setPlaceholderText(
+            "留空 = 默认目录 ~/PyEnvInspector/runtimes/py-<版本>")
+        row2.addWidget(self.py_dir_edit, 1)
+        browse_btn = QPushButton("浏览…")
+        browse_btn.setFixedHeight(30)
+        browse_btn.clicked.connect(self._browse_install_dir)
+        row2.addWidget(browse_btn)
+        self.py_add_path_check = QCheckBox("添加到用户 Path 环境变量")
+        self.py_add_path_check.setToolTip(
+            "勾选后新装的 python.exe 与 Scripts 目录会追加到用户级 Path,\n"
+            "新开的终端可直接使用 python 命令; 删除解释器时自动从 Path 移除。")
+        row2.addWidget(self.py_add_path_check)
+        layout.addLayout(row2)
+
+        self.py_table = QTableWidget(0, 4)
+        self.py_table.setHorizontalHeaderLabels(
+            ["版本", "安装目录", "安装时间", "用户 Path"])
         self.py_table.verticalHeader().setVisible(False)
         self.py_table.setEditTriggers(QTableWidget.EditTrigger.NoEditTriggers)
         self.py_table.setSelectionBehavior(
@@ -143,11 +163,19 @@ class ManagePage(QWidget):
         h.setSectionResizeMode(0, QHeaderView.ResizeMode.ResizeToContents)
         h.setSectionResizeMode(1, QHeaderView.ResizeMode.Stretch)
         h.setSectionResizeMode(2, QHeaderView.ResizeMode.ResizeToContents)
+        h.setSectionResizeMode(3, QHeaderView.ResizeMode.ResizeToContents)
         self.py_table.itemSelectionChanged.connect(
             lambda: self.py_remove_btn.setEnabled(
                 bool(self.py_table.selectedItems())))
         layout.addWidget(self.py_table, 1)
         self.tabs.addTab(page, "Python 解释器")
+
+    def _browse_install_dir(self) -> None:
+        current = self.py_dir_edit.text().strip()
+        chosen = QFileDialog.getExistingDirectory(
+            self, "选择安装目录", current or os.path.expanduser("~"))
+        if chosen:
+            self.py_dir_edit.setText(chosen)
 
     def _build_conda_tab(self) -> None:
         page = QWidget()
@@ -310,6 +338,11 @@ class ManagePage(QWidget):
             self.py_table.setItem(row, 1, path_item)
             self.py_table.setItem(
                 row, 2, QTableWidgetItem(item["installed_at"] or "—"))
+            path_flag = QTableWidgetItem("已加入" if item.get("added_to_path") else "—")
+            path_flag.setTextAlignment(Qt.AlignCenter)
+            if item.get("added_to_path"):
+                path_flag.setForeground(QColor("#2f8f5b"))
+            self.py_table.setItem(row, 3, path_flag)
 
     def _reload_env_table(self) -> None:
         envs = self._conda_info.envs if self._conda_info else []
@@ -446,12 +479,16 @@ class ManagePage(QWidget):
     # ------------------------------------------------------------------
     def _install_python(self) -> None:
         version = self.py_version_combo.currentData()
+        target_dir = self.py_dir_edit.text().strip() or None
+        add_to_path = self.py_add_path_check.isChecked()
         self._start_op(
-            f"安装 Python {version}",
-            em.install_python, version,
+            f"安装 Python {version}" + (" 并加入 Path" if add_to_path else ""),
+            em.install_python, version, target_dir, add_to_path,
             after="interpreters",
-            message=f"Python {version} 已安装并出现在解释器列表中。",
-            result_text=f"安装目录: {os.path.join(em.get_runtimes_dir(), 'py-' + version)}")
+            message=(f"Python {version} 已安装"
+                     + (" 并已添加到用户 Path 环境变量" if add_to_path else "")
+                     + ", 现在可以在解释器页查看。"),
+            result_text=f"安装目录: {target_dir or os.path.join(em.get_runtimes_dir(), 'py-' + version)}")
 
     def _remove_python(self) -> None:
         row = self.py_table.currentRow()
@@ -469,9 +506,11 @@ class ManagePage(QWidget):
         box = QMessageBox(self)
         box.setIcon(QMessageBox.Icon.Warning)
         box.setWindowTitle("确认删除 Python 解释器")
+        extra = ("\n\n注意: 该解释器已加入用户 Path 环境变量, 删除时会自动从中移除。"
+                 if item.get("added_to_path") else "")
         box.setText(
             f"确定要删除 Python {version} 吗?\n\n路径: {item['dir']}\n\n"
-            "该操作不可恢复!")
+            f"该操作不可恢复!{extra}")
         box.setStandardButtons(QMessageBox.StandardButton.Yes |
                                QMessageBox.StandardButton.No)
         box.setDefaultButton(QMessageBox.StandardButton.No)

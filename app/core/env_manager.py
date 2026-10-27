@@ -33,6 +33,7 @@ import urllib.request
 # ---------------------------------------------------------------------------
 
 MANAGED_MARKER = "pyenv-inspector-managed.json"
+_MANAGED_REGISTRY = "managed.json"   # 托管解释器登记表(支持自定义安装目录)
 PBS_RELEASE = "20241016"
 
 # 可安装的 Python 版本(经 2026-10-27 实测确认存在于该 release)
@@ -82,29 +83,108 @@ def is_managed_interpreter(path: str) -> bool:
     return os.path.isfile(marker)
 
 
+# ---------------------------------------------------------------------------
+# 托管解释器登记表(~/PyEnvInspector/managed.json)
+# 自定义安装路径的解释器不在 runtimes 目录下, 必须显式登记才能被发现。
+# ---------------------------------------------------------------------------
+
+def _registry_path() -> str:
+    return os.path.join(get_managed_root(), _MANAGED_REGISTRY)
+
+
+def _load_registry() -> list[dict]:
+    try:
+        with open(_registry_path(), encoding="utf-8") as fh:
+            data = json.load(fh)
+        return data if isinstance(data, list) else []
+    except (OSError, json.JSONDecodeError):
+        return []
+
+
+def _save_registry(entries: list[dict]) -> None:
+    os.makedirs(get_managed_root(), exist_ok=True)
+    with open(_registry_path(), "w", encoding="utf-8") as fh:
+        json.dump(entries, fh, ensure_ascii=False, indent=2)
+
+
+def register_managed(env_dir: str, python_version: str,
+                     added_to_path: bool = False) -> None:
+    """把解释器写入登记表(同目录幂等覆盖)。"""
+    env_dir = os.path.normpath(os.path.abspath(env_dir))
+    entries = [e for e in _load_registry()
+               if os.path.normcase(e.get("dir", "")) != os.path.normcase(env_dir)]
+    import datetime
+    entries.append({
+        "dir": env_dir,
+        "python_version": python_version,
+        "added_to_path": bool(added_to_path),
+        "installed_at": datetime.datetime.now().isoformat(timespec="seconds"),
+    })
+    _save_registry(entries)
+
+
+def unregister_managed(env_dir: str) -> None:
+    """从登记表移除。"""
+    env_dir = os.path.normcase(os.path.normpath(os.path.abspath(env_dir)))
+    _save_registry([e for e in _load_registry()
+                    if os.path.normcase(e.get("dir", "")) != env_dir])
+
+
+def _registry_entry_of(env_dir: str) -> dict | None:
+    env_dir = os.path.normcase(os.path.normpath(os.path.abspath(env_dir)))
+    for e in _load_registry():
+        if os.path.normcase(e.get("dir", "")) == env_dir:
+            return e
+    return None
+
+
+def _exe_of(env_dir: str) -> str:
+    return os.path.join(
+        env_dir, "python.exe" if os.name == "nt" else os.path.join("bin", "python"))
+
+
 def list_managed_interpreters() -> list[dict]:
-    """列出本工具安装的全部解释器。"""
-    runtimes = get_runtimes_dir()
+    """列出本工具安装的全部解释器(登记表 + runtimes 兼容扫描)。"""
     result: list[dict] = []
-    if not os.path.isdir(runtimes):
-        return result
-    for name in sorted(os.listdir(runtimes)):
-        env_dir = os.path.join(runtimes, name)
-        marker = os.path.join(env_dir, MANAGED_MARKER)
-        exe = os.path.join(env_dir,
-                           "python.exe" if os.name == "nt" else "bin/python")
-        if os.path.isfile(marker) and os.path.isfile(exe):
-            try:
-                with open(marker, encoding="utf-8") as fh:
-                    meta = json.load(fh)
-            except (OSError, json.JSONDecodeError):
-                meta = {}
-            result.append({
-                "dir": env_dir,
-                "python_exe": exe,
-                "version": meta.get("python_version", name),
-                "installed_at": meta.get("installed_at", ""),
-            })
+    seen: set[str] = set()
+    for e in _load_registry():
+        env_dir = e.get("dir", "")
+        exe = _exe_of(env_dir)
+        if not os.path.isfile(exe):
+            continue  # 目录已被外部删除, 跳过(不清理, 交由删除流程)
+        norm = os.path.normcase(env_dir)
+        if norm in seen:
+            continue
+        seen.add(norm)
+        result.append({
+            "dir": env_dir,
+            "python_exe": exe,
+            "version": e.get("python_version", os.path.basename(env_dir)),
+            "installed_at": e.get("installed_at", ""),
+            "added_to_path": bool(e.get("added_to_path")),
+        })
+    # 兼容: 旧版本只写 marker 不写登记表, 扫 runtimes 目录补齐
+    runtimes = get_runtimes_dir()
+    if os.path.isdir(runtimes):
+        for name in sorted(os.listdir(runtimes)):
+            env_dir = os.path.join(runtimes, name)
+            if os.path.normcase(env_dir) in seen:
+                continue
+            marker = os.path.join(env_dir, MANAGED_MARKER)
+            exe = _exe_of(env_dir)
+            if os.path.isfile(marker) and os.path.isfile(exe):
+                try:
+                    with open(marker, encoding="utf-8") as fh:
+                        meta = json.load(fh)
+                except (OSError, json.JSONDecodeError):
+                    meta = {}
+                result.append({
+                    "dir": env_dir,
+                    "python_exe": exe,
+                    "version": meta.get("python_version", name),
+                    "installed_at": meta.get("installed_at", ""),
+                    "added_to_path": False,
+                })
     return result
 
 
@@ -184,10 +264,14 @@ def _sha256_of(path: str) -> str:
 # Python 解释器: 安装 / 删除
 # ---------------------------------------------------------------------------
 
-def install_python(version: str, on_output=None) -> str:
+def install_python(version: str, on_output=None, target_dir: str | None = None,
+                   add_to_path: bool = False) -> str:
     """安装指定版本的 Python, 返回解释器安装目录。
 
-    步骤: 检查重复 → 多镜像下载 tar.gz → sha256 校验 → 解压 → 写托管标记。
+    :param target_dir: 自定义安装目录(None = 默认 ~/PyEnvInspector/runtimes/py-<版本>);
+                       必须是不存在的目录或空目录
+    :param add_to_path: 是否把解释器目录与 Scripts 目录追加到用户级 Path 环境变量
+    步骤: 校验 → 多镜像下载 tar.gz → sha256 校验 → 解压 → 写托管标记+登记 → (可选)写 Path
     """
     if on_output is None:
         on_output = lambda msg: None
@@ -195,8 +279,26 @@ def install_python(version: str, on_output=None) -> str:
         raise EnvManagerError(
             f"不支持的版本 {version!r}。可安装: {', '.join(sorted(PYTHON_DISTRIBUTIONS))}")
 
-    env_dir = os.path.join(get_runtimes_dir(), f"py-{version}")
-    if os.path.isdir(env_dir):
+    default_dir = os.path.join(get_runtimes_dir(), f"py-{version}")
+    if target_dir:
+        env_dir = os.path.normpath(os.path.abspath(os.path.expanduser(target_dir)))
+        drive, _ = os.path.splitdrive(env_dir)
+        if not drive:
+            raise EnvManagerError(f"安装路径必须是本机绝对路径, 收到: {target_dir!r}")
+        if os.path.isfile(env_dir):
+            raise EnvManagerError(f"安装路径已被同名文件占用: {env_dir}")
+        if os.path.isdir(env_dir):
+            if os.path.isfile(_exe_of(env_dir)):
+                raise EnvManagerError(f"目标目录中已存在 Python 解释器: {env_dir}")
+            try:
+                if any(os.scandir(env_dir)):
+                    raise EnvManagerError(
+                        f"安装目录非空, 为避免误覆盖请选择空目录: {env_dir}")
+            except OSError as exc:
+                raise EnvManagerError(f"无法访问安装目录: {exc}") from exc
+    else:
+        env_dir = os.path.normpath(default_dir)
+    if os.path.isdir(env_dir) and os.path.isfile(_exe_of(env_dir)):
         raise EnvManagerError(f"Python {version} 已安装于 {env_dir}")
 
     filename = PYTHON_DISTRIBUTIONS[version]
@@ -238,28 +340,48 @@ def install_python(version: str, on_output=None) -> str:
         except tarfile.TarError as exc:
             raise EnvManagerError(f"解压失败: {exc}") from exc
 
-        # 归位: 包内根为 python/ → 移动到 runtimes/py-<version>
+        # 归位: 包内根为 python/ → 移动到目标目录。
+        # 自定义目录可能已存在(空目录): 先移除空壳再 move, 否则 move 会
+        # 把内容塞进它的同名子目录。
         src_root = os.path.join(extract_to, "python")
         if not os.path.isdir(src_root):
             src_root = extract_to
         os.makedirs(os.path.dirname(env_dir), exist_ok=True)
+        if os.path.isdir(env_dir):
+            try:
+                os.rmdir(env_dir)  # 仅空目录可删; 非空已被前置校验拦截
+            except OSError as exc:
+                raise EnvManagerError(f"无法写入安装目录 {env_dir}: {exc}") from exc
         shutil.move(src_root, env_dir)
 
     # 探测实际版本并写标记
-    exe = os.path.join(
-        env_dir, "python.exe" if os.name == "nt" else os.path.join("bin", "python"))
+    exe = _exe_of(env_dir)
     if not os.path.isfile(exe):
         shutil.rmtree(env_dir, ignore_errors=True)
         raise EnvManagerError("解压结果异常: 未找到 python 可执行文件")
     code, out = run_streaming([exe, "-c", "import platform; print(platform.python_version())"])
     actual_version = out.strip().splitlines()[-1] if out.strip() else version
     _write_marker(env_dir, actual_version)
+
+    # 用户级 Path 环境变量(可勾选)
+    if add_to_path:
+        on_output("添加到用户 Path 环境变量…")
+        try:
+            changed = add_to_user_path([env_dir, os.path.join(env_dir, "Scripts")])
+            on_output("✔ 已加入用户 Path (新开的终端/应用立即可用)"
+                      if changed else "Path 中已包含这些目录, 跳过")
+        except EnvManagerError:
+            raise
+        except Exception as exc:
+            on_output(f"警告: 写入 Path 失败({exc}), 解释器仍可正常使用")
+
+    register_managed(env_dir, actual_version, added_to_path=add_to_path)
     on_output(f"✔ Python {actual_version} 安装完成: {env_dir}")
     return env_dir
 
 
 def remove_interpreter(env_dir: str, on_output=None) -> None:
-    """删除托管解释器(含占用检测; 非托管解释器拒绝删除)。"""
+    """删除托管解释器(含占用检测、Path 清理; 非托管解释器拒绝删除)。"""
     if on_output is None:
         on_output = lambda msg: None
     env_dir = os.path.normpath(os.path.abspath(env_dir))
@@ -274,9 +396,90 @@ def remove_interpreter(env_dir: str, on_output=None) -> None:
         detail = "\n".join(f"  PID {pid}  {name}" for pid, name, _ in blockers)
         raise EnvManagerError(
             f"该环境正被以下进程占用, 请先关闭后重试:\n{detail}")
+    # 清理当初勾选加入的用户 Path
+    entry = _registry_entry_of(env_dir)
+    if entry and entry.get("added_to_path"):
+        try:
+            if remove_from_user_path([env_dir, os.path.join(env_dir, "Scripts")]):
+                on_output("已从用户 Path 中移除该解释器目录")
+        except Exception as exc:
+            on_output(f"警告: 从 Path 移除失败({exc}), 可在系统设置中手动清理")
     on_output("正在删除解释器目录…")
     shutil.rmtree(env_dir)
+    unregister_managed(env_dir)
     on_output(f"✔ 已删除: {env_dir}")
+
+
+# ---------------------------------------------------------------------------
+# 用户级 Path 环境变量 (HKCU\Environment, REG_EXPAND_SZ 保持展开语义)
+# ---------------------------------------------------------------------------
+
+def add_to_user_path(dirs: list[str]) -> bool:
+    """把目录追加到用户级 Path(幂等)。返回是否有实际变更。
+
+    写入后广播 WM_SETTINGCHANGE, 让资源管理器与新启动的应用立即
+    感知变化(否则要等注销/重启)。
+    """
+    if os.name != "nt":
+        return False
+    import winreg
+    wanted = [os.path.normpath(os.path.abspath(d)) for d in dirs]
+    with winreg.OpenKey(winreg.HKEY_CURRENT_USER, "Environment", 0,
+                        winreg.KEY_QUERY_VALUE) as key:
+        try:
+            old, _typ = winreg.QueryValueEx(key, "Path")
+        except FileNotFoundError:
+            old = ""
+    existing = {os.path.normcase(p.strip()) for p in old.split(";") if p.strip()}
+    to_add = [d for d in wanted if os.path.normcase(d) not in existing]
+    if not to_add:
+        return False
+    paths = [p for p in old.split(";") if p.strip()] + to_add
+    new_value = ";".join(paths)
+    with winreg.OpenKey(winreg.HKEY_CURRENT_USER, "Environment", 0,
+                        winreg.KEY_SET_VALUE) as key:
+        winreg.SetValueEx(key, "Path", 0, winreg.REG_EXPAND_SZ, new_value)
+    _broadcast_env_change()
+    return True
+
+
+def remove_from_user_path(dirs: list[str]) -> bool:
+    """从用户级 Path 移除目录(幂等)。返回是否有实际变更。"""
+    if os.name != "nt":
+        return False
+    import winreg
+    gone = {os.path.normcase(os.path.abspath(d)) for d in dirs}
+    with winreg.OpenKey(winreg.HKEY_CURRENT_USER, "Environment", 0,
+                        winreg.KEY_QUERY_VALUE) as key:
+        try:
+            old, _typ = winreg.QueryValueEx(key, "Path")
+        except FileNotFoundError:
+            return False
+    kept = [p for p in old.split(";") if p.strip()
+            and os.path.normcase(os.path.abspath(p.strip())) not in gone]
+    if len(kept) == len([p for p in old.split(";") if p.strip()]):
+        return False  # 没有任何条目被移除
+    with winreg.OpenKey(winreg.HKEY_CURRENT_USER, "Environment", 0,
+                        winreg.KEY_SET_VALUE) as key:
+        winreg.SetValueEx(key, "Path", 0, winreg.REG_EXPAND_SZ, ";".join(kept))
+    _broadcast_env_change()
+    return True
+
+
+def _broadcast_env_change() -> None:
+    """广播 WM_SETTINGCHANGE, 通知资源管理器环境变量已变更。"""
+    try:
+        import ctypes
+        from ctypes import wintypes
+        HWND_BROADCAST = 0xFFFF
+        WM_SETTINGCHANGE = 0x001A
+        SMTO_ABORTIFHUNG = 0x0002
+        res = wintypes.DWORD()
+        ctypes.windll.user32.SendMessageTimeoutW(
+            HWND_BROADCAST, WM_SETTINGCHANGE, 0, "Environment",
+            SMTO_ABORTIFHUNG, 3000, ctypes.byref(res))
+    except Exception:
+        pass  # 广播失败不影响注册表写入结果
 
 
 # ---------------------------------------------------------------------------

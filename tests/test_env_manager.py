@@ -216,9 +216,136 @@ def test_install_python_rejects_unknown_version():
 
 
 def test_install_python_rejects_existing(monkeypatch, tmp_path):
+    """目录中已有 python.exe → 拒绝重复安装。
+    统一拦截下载(抛模拟错误), 测试绝不真实下载。"""
     monkeypatch.setattr(em, "get_runtimes_dir", lambda: str(tmp_path))
+    monkeypatch.setattr(
+        em, "_download_with_mirrors",
+        lambda *a, **k: (_ for _ in ()).throw(em.EnvManagerError("模拟下载失败")))
     existing = tmp_path / "py-3.12"
     existing.mkdir()
+    exe_name = "python.exe" if os.name == "nt" else "bin/python"
+    (existing / exe_name).parent.mkdir(parents=True, exist_ok=True)
+    (existing / exe_name).write_text("", encoding="utf-8")
     with pytest.raises(em.EnvManagerError) as ei:
         em.install_python("3.12")
     assert "已安装" in str(ei.value)
+
+
+def test_install_python_empty_target_dir_allows_install(monkeypatch, tmp_path):
+    """空目录作为自定义路径是合法的(不会被'已安装'拦截), 且下载失败
+    时安全中断并清理。"""
+    monkeypatch.setattr(em, "get_runtimes_dir", lambda: str(tmp_path / "runtimes"))
+    monkeypatch.setattr(
+        em, "_download_with_mirrors",
+        lambda *a, **k: (_ for _ in ()).throw(em.EnvManagerError("模拟下载失败")))
+    empty = tmp_path / "empty-target"
+    empty.mkdir()
+    with pytest.raises(em.EnvManagerError) as ei:
+        em.install_python("3.12", target_dir=str(empty))
+    assert "模拟下载失败" in str(ei.value)
+    # 失败后不留半成品
+    assert not any(empty.iterdir()) or not empty.exists()
+
+
+# ---------------------------------------------------------------------------
+# 登记表与自定义安装路径
+# ---------------------------------------------------------------------------
+
+def test_registry_roundtrip(monkeypatch, tmp_path):
+    monkeypatch.setattr(em, "get_managed_root", lambda: str(tmp_path))
+    em.register_managed(str(tmp_path / "custom"), "3.12.7", added_to_path=True)
+    em.register_managed(str(tmp_path / "custom2"), "3.13.0")
+    entries = em._load_registry()
+    assert len(entries) == 2
+    e = em._registry_entry_of(str(tmp_path / "custom"))
+    assert e is not None and e["added_to_path"] is True
+    em.unregister_managed(str(tmp_path / "custom"))
+    assert em._registry_entry_of(str(tmp_path / "custom")) is None
+    assert len(em._load_registry()) == 1
+
+
+def test_list_managed_includes_registry(monkeypatch, tmp_path):
+    """登记表中的自定义路径解释器必须被 list_managed_interpreters 发现
+    (这是'安装后解释器页不显示'修复的核心)。"""
+    monkeypatch.setattr(em, "get_managed_root", lambda: str(tmp_path))
+    custom = tmp_path / "my-python-3.12"      # 自定义目录, 不在 runtimes 下
+    custom.mkdir()
+    (custom / "python.exe" if os.name == "nt" else custom / "bin" / "python") \
+        .parent.mkdir(parents=True, exist_ok=True)
+    exe_name = "python.exe" if os.name == "nt" else "bin/python"
+    (custom / exe_name).write_text("", encoding="utf-8")
+    em.register_managed(str(custom), "3.12.7")
+    monkeypatch.setattr(em, "get_runtimes_dir", lambda: str(tmp_path / "runtimes"))
+    items = em.list_managed_interpreters()
+    assert any(os.path.normcase(i["dir"]) == os.path.normcase(str(custom))
+               for i in items), items
+
+
+def test_install_python_target_dir_validation(monkeypatch, tmp_path):
+    """自定义路径校验(全部发生在下载前; 拦截下载确保测试零网络)。"""
+    monkeypatch.setattr(em, "get_runtimes_dir", lambda: str(tmp_path / "runtimes"))
+    monkeypatch.setattr(
+        em, "_download_with_mirrors",
+        lambda *a, **k: (_ for _ in ()).throw(em.EnvManagerError("模拟下载失败")))
+    # 已存在解释器的目录拒绝
+    occupied = tmp_path / "occupied"
+    occupied.mkdir()
+    exe_name = "python.exe" if os.name == "nt" else "bin/python"
+    (occupied / exe_name).parent.mkdir(parents=True, exist_ok=True)
+    (occupied / exe_name).write_text("", encoding="utf-8")
+    with pytest.raises(em.EnvManagerError) as ei:
+        em.install_python("3.12", target_dir=str(occupied))
+    assert "已存在" in str(ei.value)
+    # 非空目录拒绝
+    nonempty = tmp_path / "nonempty"
+    nonempty.mkdir()
+    (nonempty / "somefile.txt").write_text("x", encoding="utf-8")
+    with pytest.raises(em.EnvManagerError) as ei:
+        em.install_python("3.12", target_dir=str(nonempty))
+    assert "非空" in str(ei.value)
+    # 指向文件拒绝
+    as_file = tmp_path / "as-file"
+    as_file.write_text("x", encoding="utf-8")
+    with pytest.raises(em.EnvManagerError):
+        em.install_python("3.12", target_dir=str(as_file))
+    # 相对路径会被展开为绝对路径(合法行为), 不在此校验
+
+
+# ---------------------------------------------------------------------------
+# 用户 Path 环境变量(真实读写 HKCU, 原值必须恢复)
+# ---------------------------------------------------------------------------
+
+@pytest.mark.skipif(os.name != "nt", reason="Windows 注册表")
+def test_add_remove_user_path_roundtrip():
+    import winreg
+    with winreg.OpenKey(winreg.HKEY_CURRENT_USER, "Environment", 0,
+                        winreg.KEY_QUERY_VALUE) as key:
+        try:
+            orig, _typ = winreg.QueryValueEx(key, "Path")
+        except FileNotFoundError:
+            orig = ""
+    marker_dir = r"C:\__pyenv_inspector_test_marker__"
+    marker_scripts = os.path.join(marker_dir, "Scripts")
+    try:
+        changed = em.add_to_user_path([marker_dir, marker_scripts])
+        assert changed is True
+        # 幂等: 重复添加无变更
+        assert em.add_to_user_path([marker_dir]) is False
+        # 确认注册表已含
+        with winreg.OpenKey(winreg.HKEY_CURRENT_USER, "Environment", 0,
+                            winreg.KEY_QUERY_VALUE) as key:
+            cur, _t = winreg.QueryValueEx(key, "Path")
+        assert marker_dir in cur and marker_scripts in cur
+        # 移除
+        assert em.remove_from_user_path([marker_dir, marker_scripts]) is True
+        with winreg.OpenKey(winreg.HKEY_CURRENT_USER, "Environment", 0,
+                            winreg.KEY_QUERY_VALUE) as key:
+            cur2, _t = winreg.QueryValueEx(key, "Path")
+        assert marker_dir not in cur2
+        # 移除不存在的条目: 无变更
+        assert em.remove_from_user_path([marker_dir]) is False
+    finally:
+        with winreg.OpenKey(winreg.HKEY_CURRENT_USER, "Environment", 0,
+                            winreg.KEY_SET_VALUE) as key:
+            winreg.SetValueEx(key, "Path", 0, winreg.REG_EXPAND_SZ, orig)
