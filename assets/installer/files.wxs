@@ -1,0 +1,711 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Wix xmlns="http://schemas.microsoft.com/wix/2006/wi">
+    <Fragment>
+        <DirectoryRef Id="INSTALLDIR">
+            <Directory Id="dirA55AF069D2625F3FE476404EC66AEC86" Name="_internal" />
+        </DirectoryRef>
+    </Fragment>
+    <Fragment>
+        <ComponentGroup Id="AppFiles">
+            <Component Id="cmpEDE630BED5553B9678EEE733A8DAEB01" Directory="INSTALLDIR" Guid="{0C29575A-DA0A-4238-9E4C-1A17FD778E52}">
+                <File Id="fil9C1703E4FDA83DEABF802C3D58200226" KeyPath="yes" Source="$(var.BuildDir)\PyEnvInspector.exe" />
+            </Component>
+            <Component Id="cmp5715C272E0F091BABBBF64F73E2CEC74" Directory="dirA55AF069D2625F3FE476404EC66AEC86" Guid="{4298426C-F08C-4645-9775-4E56597B37FE}">
+                <File Id="fil8ECB7D15A4F468023DE67615894BCED3" KeyPath="yes" Source="$(var.BuildDir)\_internal\api-ms-win-core-console-l1-1-0.dll" />
+            </Component>
+            <Component Id="cmpB0EAF0816F81A5F743DBC031F356286F" Directory="dirA55AF069D2625F3FE476404EC66AEC86" Guid="{4E31E6A1-6F67-480D-AEFF-662514BF32E1}">
+                <File Id="fil343B3E23C83F99733C1DB80C10F82DDC" KeyPath="yes" Source="$(var.BuildDir)\_internal\api-ms-win-core-datetime-l1-1-0.dll" />
+            </Component>
+            <Component Id="cmp6439AF18A48FB931468AE9D9449BD8CF" Directory="dirA55AF069D2625F3FE476404EC66AEC86" Guid="{0813F975-0F3B-4292-B05A-FD8F81A5D052}">
+                <File Id="filF1F7BC44E22945507F3C4F857C9B4BB1" KeyPath="yes" Source="$(var.BuildDir)\_internal\api-ms-win-core-debug-l1-1-0.dll" />
+            </Component>
+            <Component Id="cmp7D624978BE34DC3752A01F5831ADCD52" Directory="dirA55AF069D2625F3FE476404EC66AEC86" Guid="{F9BB0274-18BF-4742-ADFB-27C6DA9637C3}">
+                <File Id="fil26798893ACB024B105C8F0AF416CCB0C" KeyPath="yes" Source="$(var.BuildDir)\_internal\api-ms-win-core-errorhandling-l1-1-0.dll" />
+            </Component>
+            <Component Id="cmp12CD6B05D917655F03FF2B8B18FE8DA2" Directory="dirA55AF069D2625F3FE476404EC66AEC86" Guid="{1C74C7B7-6561-470D-B464-96E9517BDD91}">
+                <File Id="fil2EA7D48A12ADFCD2066D0E19821DAE3C" KeyPath="yes" Source="$(var.BuildDir)\_internal\api-ms-win-core-fibers-l1-1-0.dll" />
+            </Component>
+            <Component Id="cmp11732DB21FDBD0C8B05C2A02A19550FF" Directory="dirA55AF069D2625F3FE476404EC66AEC86" Guid="{61D23364-20DD-4FE9-81D2-DA87F1BCC2DC}">
+                <File Id="fil5A235C67CC6345043A38134976DD1623" KeyPath="yes" Source="$(var.BuildDir)\_internal\api-ms-win-core-fibers-l1-1-1.dll" />
+            </Component>
+            <Component Id="cmpD514017BD1816B88FD218586A46B9ACE" Directory="dirA55AF069D2625F3FE476404EC66AEC86" Guid="{C94D1F8A-7F6D-470D-B473-85DCE9EC5188}">
+                <File Id="filBF32D7B3ACD074AF8C9A4B1E69F55EC3" KeyPath="yes" Source="$(var.BuildDir)\_internal\api-ms-win-core-file-l1-1-0.dll" />
+            </Component>
+            <Component Id="cmp125033A3C836F191788E1EA377381751" Directory="dirA55AF069D2625F3FE476404EC66AEC86" Guid="{21CA4F6B-47FC-4784-861F-A9269A2153FE}">
+                <File Id="fil3199F58B8FF08F3BE6346EB552065F90" KeyPath="yes" Source="$(var.BuildDir)\_internal\api-ms-win-core-file-l1-2-0.dll" />
+            </Component>
+            <Component Id="cmpDBDE182095178B809D498515A319F186" Directory="dirA55AF069D2625F3FE476404EC66AEC86" Guid="{753082BC-2855-4FE0-A916-0536A6F8B0C4}">
+                <File Id="fil298ABA1BF8AB5888764C4F83DF527930" KeyPath="yes" Source="$(var.BuildDir)\_internal\api-ms-win-core-file-l2-1-0.dll" />
+            </Component>
+            <Component Id="cmp2AFB8919DAF976A44A9E4D44E0ECC00C" Directory="dirA55AF069D2625F3FE476404EC66AEC86" Guid="{0C63CC2D-E1FB-46BE-8413-83C18866520B}">
+                <File Id="fil464BB9D1F060E4CE141368BE451AFBF1" KeyPath="yes" Source="$(var.BuildDir)\_internal\api-ms-win-core-handle-l1-1-0.dll" />
+            </Component>
+            <Component Id="cmpF361626AF0D424914A0563A3272C18A1" Directory="dirA55AF069D2625F3FE476404EC66AEC86" Guid="{E7D4C3DD-E064-456B-9713-8D50ECC93993}">
+                <File Id="filF99C95D8F8192A41585D8E8B52887B1C" KeyPath="yes" Source="$(var.BuildDir)\_internal\api-ms-win-core-heap-l1-1-0.dll" />
+            </Component>
+            <Component Id="cmp6FB5A06556882DF4C361452807505D37" Directory="dirA55AF069D2625F3FE476404EC66AEC86" Guid="{470FBBB1-B2CC-45E6-BDD6-3AA7D2769F85}">
+                <File Id="filC6302E428B63FE540203569B5E2960EA" KeyPath="yes" Source="$(var.BuildDir)\_internal\api-ms-win-core-interlocked-l1-1-0.dll" />
+            </Component>
+            <Component Id="cmp0FD83F740619ADB3ABAA52A47232E547" Directory="dirA55AF069D2625F3FE476404EC66AEC86" Guid="{D430D390-373D-46B5-B586-AC7668D67A47}">
+                <File Id="fil7225CDEE1F4FF82FD868BBF16D314312" KeyPath="yes" Source="$(var.BuildDir)\_internal\api-ms-win-core-kernel32-legacy-l1-1-1.dll" />
+            </Component>
+            <Component Id="cmp7532ACA9BFBB8C5E2F411CA794AA3C9E" Directory="dirA55AF069D2625F3FE476404EC66AEC86" Guid="{A6EC505D-37CA-4553-9573-57C8BE7FAAAD}">
+                <File Id="filEC34DFA3223B2486AD0576B2AC94FF84" KeyPath="yes" Source="$(var.BuildDir)\_internal\api-ms-win-core-libraryloader-l1-1-0.dll" />
+            </Component>
+            <Component Id="cmpA966E8B3D4C49D9DD5D8F51C67F2BEBE" Directory="dirA55AF069D2625F3FE476404EC66AEC86" Guid="{CD8A5D25-048E-4914-9839-B99F794BE6C9}">
+                <File Id="fil167F1FBA754532FBC532EC89C91B2456" KeyPath="yes" Source="$(var.BuildDir)\_internal\api-ms-win-core-localization-l1-2-0.dll" />
+            </Component>
+            <Component Id="cmp9AF58D1A0991F92D457D6C3AA7B2C1A6" Directory="dirA55AF069D2625F3FE476404EC66AEC86" Guid="{5B2840AC-F1F3-4A47-A30C-9EC30F66C5A5}">
+                <File Id="filE01E5F9C5D8E49CA70EC19EBED0E7050" KeyPath="yes" Source="$(var.BuildDir)\_internal\api-ms-win-core-memory-l1-1-0.dll" />
+            </Component>
+            <Component Id="cmpDFA1D2E4AFC256EDBE842BA1C0672833" Directory="dirA55AF069D2625F3FE476404EC66AEC86" Guid="{ADE5EFF6-BA22-41B0-8F66-FA9C519B0B8D}">
+                <File Id="fil8B6F0ABF3746FE98B74050FD2482CADA" KeyPath="yes" Source="$(var.BuildDir)\_internal\api-ms-win-core-namedpipe-l1-1-0.dll" />
+            </Component>
+            <Component Id="cmpE089F12F7B1113A68D19A3F5C9BE01CE" Directory="dirA55AF069D2625F3FE476404EC66AEC86" Guid="{555B065E-A1D5-4205-90BF-01CDFB8796BA}">
+                <File Id="filB5DDEA0550D99ACF967EB2E5AFD4A590" KeyPath="yes" Source="$(var.BuildDir)\_internal\api-ms-win-core-processenvironment-l1-1-0.dll" />
+            </Component>
+            <Component Id="cmpFDCFE3CFDB2A96837A2EF2FD54C766DF" Directory="dirA55AF069D2625F3FE476404EC66AEC86" Guid="{4ADC0D99-908E-4DAA-A4DF-E4CEAC246B21}">
+                <File Id="fil66ED49BF0B648FA89CAFD8C499EB1575" KeyPath="yes" Source="$(var.BuildDir)\_internal\api-ms-win-core-processthreads-l1-1-0.dll" />
+            </Component>
+            <Component Id="cmp3B99CC4E43B8BD06456EA3AB0C8FD1A1" Directory="dirA55AF069D2625F3FE476404EC66AEC86" Guid="{4994CF0A-2DD1-46EE-8FD3-74DFD0B6728C}">
+                <File Id="fil4D86505E4D9E2A80C39D751EEB4727C0" KeyPath="yes" Source="$(var.BuildDir)\_internal\api-ms-win-core-processthreads-l1-1-1.dll" />
+            </Component>
+            <Component Id="cmp694D418FAD26473727915383F2618271" Directory="dirA55AF069D2625F3FE476404EC66AEC86" Guid="{6DE05C77-3E7F-471D-8D8C-9FA259BD4F32}">
+                <File Id="fil127D4DBFDF0F9EBD265CAD8B49D4A6F8" KeyPath="yes" Source="$(var.BuildDir)\_internal\api-ms-win-core-profile-l1-1-0.dll" />
+            </Component>
+            <Component Id="cmp608C7E7939AF44E18D7EADDBB27C8171" Directory="dirA55AF069D2625F3FE476404EC66AEC86" Guid="{F10C8FDC-3B4E-457C-8624-8B73E095BAF0}">
+                <File Id="filA74F11CE48053051936497D0AC11FEE9" KeyPath="yes" Source="$(var.BuildDir)\_internal\api-ms-win-core-rtlsupport-l1-1-0.dll" />
+            </Component>
+            <Component Id="cmpDCE8BE9C54B9F862F17039028BDEB4C9" Directory="dirA55AF069D2625F3FE476404EC66AEC86" Guid="{3063C641-198D-4FEE-8747-11DA1E19622F}">
+                <File Id="fil188CB6038451B130F16546318041B07C" KeyPath="yes" Source="$(var.BuildDir)\_internal\api-ms-win-core-string-l1-1-0.dll" />
+            </Component>
+            <Component Id="cmp8346587A48AABD6D32A06FDA915E69E9" Directory="dirA55AF069D2625F3FE476404EC66AEC86" Guid="{0093F362-85CF-4591-A3CD-107338387D04}">
+                <File Id="filF92FFFD104149253C74902992C89A84A" KeyPath="yes" Source="$(var.BuildDir)\_internal\api-ms-win-core-synch-l1-1-0.dll" />
+            </Component>
+            <Component Id="cmp419D5E72D26D839A1DC693B7933F1870" Directory="dirA55AF069D2625F3FE476404EC66AEC86" Guid="{A84AE23D-EC86-42A9-8DC8-83CA815FA464}">
+                <File Id="fil0F357B3FCF2730261EFEFFE759EA7808" KeyPath="yes" Source="$(var.BuildDir)\_internal\api-ms-win-core-synch-l1-2-0.dll" />
+            </Component>
+            <Component Id="cmpA2795FE87F0F92995BA70EA111E0B8D1" Directory="dirA55AF069D2625F3FE476404EC66AEC86" Guid="{459AEAF5-FB1D-48E2-BED5-40482E47C104}">
+                <File Id="fil109D77E5D7EE0A3B19240FC80AA2AD2D" KeyPath="yes" Source="$(var.BuildDir)\_internal\api-ms-win-core-sysinfo-l1-1-0.dll" />
+            </Component>
+            <Component Id="cmp63933F88F3398ED45F9F56B404C5378C" Directory="dirA55AF069D2625F3FE476404EC66AEC86" Guid="{023D4E17-A8EE-409F-ADB3-FA2E6611564A}">
+                <File Id="fil70798BD4C77EC2C3C3037806E64AA845" KeyPath="yes" Source="$(var.BuildDir)\_internal\api-ms-win-core-sysinfo-l1-2-0.dll" />
+            </Component>
+            <Component Id="cmpBD50F4048FCA291DD4ACFAA6716FB183" Directory="dirA55AF069D2625F3FE476404EC66AEC86" Guid="{42D26F1D-6784-4551-BCD2-61F66141FEBF}">
+                <File Id="fil4A3B90F3F8A0A31AB86645AEDBCA9BF4" KeyPath="yes" Source="$(var.BuildDir)\_internal\api-ms-win-core-timezone-l1-1-0.dll" />
+            </Component>
+            <Component Id="cmp77269F43ED269558DDA0198BBA6052AD" Directory="dirA55AF069D2625F3FE476404EC66AEC86" Guid="{34B6148F-9179-4046-9E08-C03F44597A44}">
+                <File Id="filCED05B2CDB0BEA50E83BDDF004DA4271" KeyPath="yes" Source="$(var.BuildDir)\_internal\api-ms-win-core-util-l1-1-0.dll" />
+            </Component>
+            <Component Id="cmp101018F5869E727E093759F2E1FE7965" Directory="dirA55AF069D2625F3FE476404EC66AEC86" Guid="{36C1E827-2B5E-44B8-ADE9-B311B49A4DFE}">
+                <File Id="filE5DC788017925B70231F3B3A6DEEE763" KeyPath="yes" Source="$(var.BuildDir)\_internal\api-ms-win-crt-conio-l1-1-0.dll" />
+            </Component>
+            <Component Id="cmp1593D61D21BFB9AE6A5AD01F5B8B48B3" Directory="dirA55AF069D2625F3FE476404EC66AEC86" Guid="{700A94C8-F14E-478B-886B-CC2A4DB5D6CB}">
+                <File Id="fil2C797384E202657F256F14B55686A6AA" KeyPath="yes" Source="$(var.BuildDir)\_internal\api-ms-win-crt-convert-l1-1-0.dll" />
+            </Component>
+            <Component Id="cmp9391C176DCA1945F60DC33B7D7491D34" Directory="dirA55AF069D2625F3FE476404EC66AEC86" Guid="{16976293-659C-489C-A6C9-910498F78776}">
+                <File Id="filC83533A90887C95D70C419D5BEC842BD" KeyPath="yes" Source="$(var.BuildDir)\_internal\api-ms-win-crt-environment-l1-1-0.dll" />
+            </Component>
+            <Component Id="cmp5DDC7B0521054E8B3905E37152FD375D" Directory="dirA55AF069D2625F3FE476404EC66AEC86" Guid="{1D9B0E1D-6E3A-457F-96DD-C449AD67A41F}">
+                <File Id="fil7D2F5C9B2AD19CF0A6F4B32246E56513" KeyPath="yes" Source="$(var.BuildDir)\_internal\api-ms-win-crt-filesystem-l1-1-0.dll" />
+            </Component>
+            <Component Id="cmp5B97378E57FD1915D731452730558E00" Directory="dirA55AF069D2625F3FE476404EC66AEC86" Guid="{E6892D0D-2162-4816-BE2B-6DDBFDEE050A}">
+                <File Id="filB4D3E2F2693C264B7B8FE2D48A029CEE" KeyPath="yes" Source="$(var.BuildDir)\_internal\api-ms-win-crt-heap-l1-1-0.dll" />
+            </Component>
+            <Component Id="cmpD1F36B54BC0FEE72C0C98F14C89CC54B" Directory="dirA55AF069D2625F3FE476404EC66AEC86" Guid="{20222F11-2253-4952-B1E7-D58D6D68C1A0}">
+                <File Id="filEAE7C411B1E978D976812E945A15D38B" KeyPath="yes" Source="$(var.BuildDir)\_internal\api-ms-win-crt-locale-l1-1-0.dll" />
+            </Component>
+            <Component Id="cmp42CCD8277CF81A302BCB96AD2A4528BA" Directory="dirA55AF069D2625F3FE476404EC66AEC86" Guid="{25EF07C1-F7FA-49FE-A391-745EE03E06B6}">
+                <File Id="fil7D212D76909F042B7155A9A29DAD6D1B" KeyPath="yes" Source="$(var.BuildDir)\_internal\api-ms-win-crt-math-l1-1-0.dll" />
+            </Component>
+            <Component Id="cmpBF2EFD0058B36F632414153F9F8B06AD" Directory="dirA55AF069D2625F3FE476404EC66AEC86" Guid="{3E0CB362-2EF4-4215-9C4C-0210FF37DC39}">
+                <File Id="filDB3F73D572B74605DED493A4834FE75A" KeyPath="yes" Source="$(var.BuildDir)\_internal\api-ms-win-crt-process-l1-1-0.dll" />
+            </Component>
+            <Component Id="cmpB02A18B1E859099F453B1A455571E80A" Directory="dirA55AF069D2625F3FE476404EC66AEC86" Guid="{22E07F6D-FA63-4F7A-B230-75143102A0FA}">
+                <File Id="fil462F97CAE05391D7E6C2724099380782" KeyPath="yes" Source="$(var.BuildDir)\_internal\api-ms-win-crt-runtime-l1-1-0.dll" />
+            </Component>
+            <Component Id="cmp2D2B21908CDB2C570EE3FC4D870DA177" Directory="dirA55AF069D2625F3FE476404EC66AEC86" Guid="{A02EC1DA-10B3-41CC-8366-EAC31450C689}">
+                <File Id="fil5F6DA66962CB88588E08FF90BAA1A446" KeyPath="yes" Source="$(var.BuildDir)\_internal\api-ms-win-crt-stdio-l1-1-0.dll" />
+            </Component>
+            <Component Id="cmpD3C6BB1DFB6717F44F0A2CC1FCB9D048" Directory="dirA55AF069D2625F3FE476404EC66AEC86" Guid="{AC987E6B-A0AC-4A71-BF8F-8C3038799D56}">
+                <File Id="filD2C9FBAA3165D3AA803349EC720C009C" KeyPath="yes" Source="$(var.BuildDir)\_internal\api-ms-win-crt-string-l1-1-0.dll" />
+            </Component>
+            <Component Id="cmp3A9F249B029C5E446A52D3EE70A3CF69" Directory="dirA55AF069D2625F3FE476404EC66AEC86" Guid="{BD12DEAB-C5B4-4904-8E4A-49C670363F7B}">
+                <File Id="filB8AA5023C7CEDACDF9A60A2208B90A8F" KeyPath="yes" Source="$(var.BuildDir)\_internal\api-ms-win-crt-time-l1-1-0.dll" />
+            </Component>
+            <Component Id="cmp86EB600E39522C46D14F7EFA8BDEC463" Directory="dirA55AF069D2625F3FE476404EC66AEC86" Guid="{9AB7CA80-6DBC-4386-8DF8-01B1E4F3B4BB}">
+                <File Id="fil037545B27C6798293169FDBE2B76D5C8" KeyPath="yes" Source="$(var.BuildDir)\_internal\api-ms-win-crt-utility-l1-1-0.dll" />
+            </Component>
+            <Component Id="cmp0F639DE9A9040EA5AF37FCDA836234AA" Directory="dirA55AF069D2625F3FE476404EC66AEC86" Guid="{2EA375E9-41A7-40AC-A71B-4902CE34C075}">
+                <File Id="fil1234C570BF15F3A868E30F7C3480595D" KeyPath="yes" Source="$(var.BuildDir)\_internal\base_library.zip" />
+            </Component>
+            <Component Id="cmp411384B74EE4966E138F73985B06A014" Directory="dirA55AF069D2625F3FE476404EC66AEC86" Guid="{DEA9A79E-6D9D-48FB-8C5C-9AD24DBA8B45}">
+                <File Id="fil1A40F54FA9E5D684187D90A3E31A34E4" KeyPath="yes" Source="$(var.BuildDir)\_internal\libcrypto-3-x64.dll" />
+            </Component>
+            <Component Id="cmp99907DB0E2A5B16AB9204B1540E5DE57" Directory="dirA55AF069D2625F3FE476404EC66AEC86" Guid="{EE4743FE-3E1E-4DEC-95F6-4EAF4FB4B08F}">
+                <File Id="fil3DA5952E17B1E4E138105FDAB4D68B78" KeyPath="yes" Source="$(var.BuildDir)\_internal\libffi-8.dll" />
+            </Component>
+            <Component Id="cmp39F00F0CF5B5C00057005ABCDF421CE4" Directory="dirA55AF069D2625F3FE476404EC66AEC86" Guid="{70C53B3C-E91D-43FD-AC75-556EC89F0EA2}">
+                <File Id="fil94D3CA771478381E216325A83B9B47CA" KeyPath="yes" Source="$(var.BuildDir)\_internal\libssl-3-x64.dll" />
+            </Component>
+            <Component Id="cmp75E98DF40EED6CC6B1AC730819CC4AA0" Directory="dirA55AF069D2625F3FE476404EC66AEC86" Guid="{06B2BEBC-9072-463D-AAA9-B6468677712E}">
+                <File Id="filB1C4A09D02A43A67BD687D566EB5FE6F" KeyPath="yes" Source="$(var.BuildDir)\_internal\python3.dll" />
+            </Component>
+            <Component Id="cmp0EA0A3B63C0D980D837CF101D04B1016" Directory="dirA55AF069D2625F3FE476404EC66AEC86" Guid="{D47E8CB3-2369-4CC4-B749-82314B57263A}">
+                <File Id="fil9FAD319761F8EB348BDF0CB194D04C45" KeyPath="yes" Source="$(var.BuildDir)\_internal\python313.dll" />
+            </Component>
+            <Component Id="cmp0C1E424B9BF28B73455DCF0936C50EDF" Directory="dirA55AF069D2625F3FE476404EC66AEC86" Guid="{F484BCA7-3337-4B52-B4A0-FA5A114A9AEC}">
+                <File Id="fil88AC27726194D557985F41F5ADCE38C3" KeyPath="yes" Source="$(var.BuildDir)\_internal\select.pyd" />
+            </Component>
+            <Component Id="cmp57727AEB91464D3200CC07CC250C80AE" Directory="dirA55AF069D2625F3FE476404EC66AEC86" Guid="{D2281F60-18A8-4FBF-9B56-00D06C70BCE5}">
+                <File Id="fil48F55C1DB368997B2E79763467C25CB6" KeyPath="yes" Source="$(var.BuildDir)\_internal\ucrtbase.dll" />
+            </Component>
+            <Component Id="cmpBB2769C1A1CA2E15F303D67D75724FE2" Directory="dirA55AF069D2625F3FE476404EC66AEC86" Guid="{7E335EF6-939D-46B5-9832-7624D38C36DB}">
+                <File Id="fil91321690B34E411663D20A0A32203420" KeyPath="yes" Source="$(var.BuildDir)\_internal\unicodedata.pyd" />
+            </Component>
+            <Component Id="cmp59FBF31118BA06383B823444A5A1BAC2" Directory="dirA55AF069D2625F3FE476404EC66AEC86" Guid="{8FC521DB-FD34-4072-9BAD-C5ADF369A985}">
+                <File Id="fil9B29E103760523D2FFE55AF342F1531D" KeyPath="yes" Source="$(var.BuildDir)\_internal\VCRUNTIME140.dll" />
+            </Component>
+            <Component Id="cmp0ABE08203E1F39EF13CF72F2EA36B826" Directory="dirA55AF069D2625F3FE476404EC66AEC86" Guid="{2FB48301-1454-4BF6-B759-42AC5242A015}">
+                <File Id="filA22FEDAF97EB0D88B80C367379C612D1" KeyPath="yes" Source="$(var.BuildDir)\_internal\VCRUNTIME140_1.dll" />
+            </Component>
+            <Component Id="cmpD7190C1E42968C42529C972A9F348949" Directory="dirA55AF069D2625F3FE476404EC66AEC86" Guid="{7E86863B-9ED2-4105-AB8A-4D80F64A9955}">
+                <File Id="fil780A849E87EFEEC8D131E8A396852A82" KeyPath="yes" Source="$(var.BuildDir)\_internal\_bz2.pyd" />
+            </Component>
+            <Component Id="cmp98D0EA727314B479BDA26948AAF25047" Directory="dirA55AF069D2625F3FE476404EC66AEC86" Guid="{5BAE7EBA-2CEA-4D80-BE26-1F64D10D5B1D}">
+                <File Id="fil0A51E125FDB9A79FE8AB1C1484202E0C" KeyPath="yes" Source="$(var.BuildDir)\_internal\_ctypes.pyd" />
+            </Component>
+            <Component Id="cmp40495FC1E99BA0EF0714E78F93A7A92C" Directory="dirA55AF069D2625F3FE476404EC66AEC86" Guid="{DD7DB8D2-2061-4C7F-9A06-30597FD6681A}">
+                <File Id="fil5372B24638ECA3AE0C166F9E1A663444" KeyPath="yes" Source="$(var.BuildDir)\_internal\_decimal.pyd" />
+            </Component>
+            <Component Id="cmp38E32A6AC0A937F38C9781842EC974EC" Directory="dirA55AF069D2625F3FE476404EC66AEC86" Guid="{0E3EE86F-7ED7-479D-B8E2-9747F8458F3F}">
+                <File Id="fil4F245AB87AF775652B4A0B5A9E9D774A" KeyPath="yes" Source="$(var.BuildDir)\_internal\_hashlib.pyd" />
+            </Component>
+            <Component Id="cmp9989A640859FC10D4A5618508ACFF18F" Directory="dirA55AF069D2625F3FE476404EC66AEC86" Guid="{DAB9BC94-8593-4FED-999D-E61FD221569B}">
+                <File Id="fil9BEC1D41181087D6267E3EB593C8078C" KeyPath="yes" Source="$(var.BuildDir)\_internal\_lzma.pyd" />
+            </Component>
+            <Component Id="cmp858A4C2DD91197F58C0E8024140860B3" Directory="dirA55AF069D2625F3FE476404EC66AEC86" Guid="{22005E01-AB0B-4AB6-9DB5-82017D00448E}">
+                <File Id="filD65D28F97D8828DE73B85F21D1C938AC" KeyPath="yes" Source="$(var.BuildDir)\_internal\_queue.pyd" />
+            </Component>
+            <Component Id="cmp8E79A40303C4C7E9A327461D1217A6F6" Directory="dirA55AF069D2625F3FE476404EC66AEC86" Guid="{4B6A1BC8-6659-42AB-BC26-8A03C46EA771}">
+                <File Id="filF13C75947D937B523AD0FEF61D72BB58" KeyPath="yes" Source="$(var.BuildDir)\_internal\_socket.pyd" />
+            </Component>
+            <Component Id="cmpFD71A6E11F767D314914BAED448D270C" Directory="dirA55AF069D2625F3FE476404EC66AEC86" Guid="{61DBDC89-01DB-4637-9490-FB8D7A1C0AF5}">
+                <File Id="filDA03B004BBE7B5015C1629461875A484" KeyPath="yes" Source="$(var.BuildDir)\_internal\_ssl.pyd" />
+            </Component>
+            <Component Id="cmp857F402501751522AC17C92539958FFC" Directory="dirA55AF069D2625F3FE476404EC66AEC86" Guid="{670C89C9-5AF1-4476-BDCC-46C0CBA49DC2}">
+                <File Id="fil6235BFEF7694A49068941630F21C4E1C" KeyPath="yes" Source="$(var.BuildDir)\_internal\_wmi.pyd" />
+            </Component>
+            <Component Id="cmp89DFA61CF302F74ABB80F3371F1AA517" Directory="dirA757B05E45E75E9F340417F29C846C41" Guid="{54C78A81-1688-40F9-A414-7F0FE5C89D63}">
+                <File Id="fil775B8E7394F58B7FFDF6BC01A0A3A4BA" KeyPath="yes" Source="$(var.BuildDir)\_internal\PySide6\MSVCP140.dll" />
+            </Component>
+            <Component Id="cmpE60E7F9DB7C1C36D41EF4AF58B56F618" Directory="dirA757B05E45E75E9F340417F29C846C41" Guid="{10C8FBAB-8416-47B1-B231-F2F5177D2016}">
+                <File Id="filF1510C02C6B0D843C3CC6E36204F96AE" KeyPath="yes" Source="$(var.BuildDir)\_internal\PySide6\MSVCP140_1.dll" />
+            </Component>
+            <Component Id="cmp19AE5EFBD18449EC5E6CB23DBF7E57C4" Directory="dirA757B05E45E75E9F340417F29C846C41" Guid="{CEFCE270-A83C-4027-95DC-B52324313DAC}">
+                <File Id="filEB519876BED48DDA8A4CA3F6DB52EA5D" KeyPath="yes" Source="$(var.BuildDir)\_internal\PySide6\MSVCP140_2.dll" />
+            </Component>
+            <Component Id="cmp970D698E7E5A7E6765EE2D8A2091FC97" Directory="dirA757B05E45E75E9F340417F29C846C41" Guid="{48CA6792-F320-4145-A7A9-0BA4B36EC4D3}">
+                <File Id="fil98FA0C47361CB5471ABAAE9B1DD0E114" KeyPath="yes" Source="$(var.BuildDir)\_internal\PySide6\opengl32sw.dll" />
+            </Component>
+            <Component Id="cmp934D0E6F735B5B3BEE325F1C6F780328" Directory="dirA757B05E45E75E9F340417F29C846C41" Guid="{48D009FC-C182-45A6-B638-982FC6CBFC46}">
+                <File Id="fil40B20D592A54A1EA6BF75BC1DF547B95" KeyPath="yes" Source="$(var.BuildDir)\_internal\PySide6\pyside6.abi3.dll" />
+            </Component>
+            <Component Id="cmpFE76BA03AADA57CEB80CD838C6B73A5D" Directory="dirA757B05E45E75E9F340417F29C846C41" Guid="{9D00C1CF-1EC0-4A92-BB8B-09DC1432C61E}">
+                <File Id="fil1A9D5993C81D144F8ED45AB03C0ABA46" KeyPath="yes" Source="$(var.BuildDir)\_internal\PySide6\Qt6Core.dll" />
+            </Component>
+            <Component Id="cmp31282CB8AB771E4A1ECEB3145DFBDE64" Directory="dirA757B05E45E75E9F340417F29C846C41" Guid="{C5FAE6E2-1BA7-43B3-B473-C856F9A282E2}">
+                <File Id="fil9C7DEBD987B363C1598990C19916A87F" KeyPath="yes" Source="$(var.BuildDir)\_internal\PySide6\Qt6Gui.dll" />
+            </Component>
+            <Component Id="cmp82A7B3C0529A63E266D217D79753C220" Directory="dirA757B05E45E75E9F340417F29C846C41" Guid="{155238C3-21E0-46F7-B698-2DC2987CC3CE}">
+                <File Id="filC69ED6B8E5EEC76094C9DF58874D9DBB" KeyPath="yes" Source="$(var.BuildDir)\_internal\PySide6\Qt6Network.dll" />
+            </Component>
+            <Component Id="cmp2FF9A800F8598E54DD9E323481B61E61" Directory="dirA757B05E45E75E9F340417F29C846C41" Guid="{C663ED3D-0AB9-4D65-81C0-8E355B0BE370}">
+                <File Id="fil2D87E129AA8F48439A4FD120C328AAF2" KeyPath="yes" Source="$(var.BuildDir)\_internal\PySide6\Qt6OpenGL.dll" />
+            </Component>
+            <Component Id="cmpC412B0841761DD841F74835D2421AAF2" Directory="dirA757B05E45E75E9F340417F29C846C41" Guid="{20E96A04-5A06-45B8-B53D-99098CDFAC5C}">
+                <File Id="fil3FB6E0EB568E57A508A59EFCD85EA37A" KeyPath="yes" Source="$(var.BuildDir)\_internal\PySide6\Qt6Pdf.dll" />
+            </Component>
+            <Component Id="cmpD80D34344103C1287021E2E86A257D83" Directory="dirA757B05E45E75E9F340417F29C846C41" Guid="{B059BF3C-0C81-45BD-9474-ED72A85E373E}">
+                <File Id="filEE9936252B6E4A5B093E11FCF74A6127" KeyPath="yes" Source="$(var.BuildDir)\_internal\PySide6\Qt6Qml.dll" />
+            </Component>
+            <Component Id="cmp000C78BBFA7BBB5279F1295634A10B63" Directory="dirA757B05E45E75E9F340417F29C846C41" Guid="{DC600EEF-56C4-4C37-B0B3-F5B4B3E5BBE1}">
+                <File Id="fil1AD1659F890104917674C515C1F71F15" KeyPath="yes" Source="$(var.BuildDir)\_internal\PySide6\Qt6QmlMeta.dll" />
+            </Component>
+            <Component Id="cmpC5D40967CB4A84D8FA3CFB4B91551ADF" Directory="dirA757B05E45E75E9F340417F29C846C41" Guid="{E26A4FBF-E8E2-4D15-B60F-0123B23D312B}">
+                <File Id="filED21FDC8EB294947DF011543E3B2B7FC" KeyPath="yes" Source="$(var.BuildDir)\_internal\PySide6\Qt6QmlModels.dll" />
+            </Component>
+            <Component Id="cmpCC6FBCC6C8A51AD4DE5A621FB5C73F1A" Directory="dirA757B05E45E75E9F340417F29C846C41" Guid="{9EAD017E-740A-4974-BA31-F27D1ED98A68}">
+                <File Id="fil0307547F64FFE6A7F057E73908BF04C2" KeyPath="yes" Source="$(var.BuildDir)\_internal\PySide6\Qt6QmlWorkerScript.dll" />
+            </Component>
+            <Component Id="cmp124E6A5CB7977F54DDAD9385B0ED6059" Directory="dirA757B05E45E75E9F340417F29C846C41" Guid="{012AD57F-C6B0-49E8-B69C-41279B9BBC5F}">
+                <File Id="fil17682C444163528BA94BE05064749328" KeyPath="yes" Source="$(var.BuildDir)\_internal\PySide6\Qt6Quick.dll" />
+            </Component>
+            <Component Id="cmpFF8298B8AD986553EE2913D0349C6493" Directory="dirA757B05E45E75E9F340417F29C846C41" Guid="{A7D183D7-1923-4BE4-83C7-DF89A4795EDC}">
+                <File Id="fil521FC0284B6700E867BACE4043261F28" KeyPath="yes" Source="$(var.BuildDir)\_internal\PySide6\Qt6Svg.dll" />
+            </Component>
+            <Component Id="cmp0DC97BEF45BD307F23406AE1C28599F9" Directory="dirA757B05E45E75E9F340417F29C846C41" Guid="{551E1CB3-310A-47F8-B96F-C8606C2B914E}">
+                <File Id="filDABC44C0604D7482A62AFD2CF552B2C6" KeyPath="yes" Source="$(var.BuildDir)\_internal\PySide6\Qt6VirtualKeyboard.dll" />
+            </Component>
+            <Component Id="cmp3F678EF2735098F79B6F635C8640F91A" Directory="dirA757B05E45E75E9F340417F29C846C41" Guid="{1C5329B4-52CE-4A88-8919-E8A3BF9DA85B}">
+                <File Id="filDADFF80E444644116C4B0ABE906D0202" KeyPath="yes" Source="$(var.BuildDir)\_internal\PySide6\Qt6Widgets.dll" />
+            </Component>
+            <Component Id="cmpA5A88AF89B12E14E14680363055796E0" Directory="dirA757B05E45E75E9F340417F29C846C41" Guid="{C8DDC454-C418-4E43-B717-B80C747FFFA1}">
+                <File Id="filCA572C1C84EE977A877D36793158F7D7" KeyPath="yes" Source="$(var.BuildDir)\_internal\PySide6\QtCore.pyd" />
+            </Component>
+            <Component Id="cmpBE3E6107B550F610886567D466277E23" Directory="dirA757B05E45E75E9F340417F29C846C41" Guid="{CAEFF5EA-B692-4713-A971-A5312D18C7DE}">
+                <File Id="fil2BD233C84D833F4F2F0F8100FC749963" KeyPath="yes" Source="$(var.BuildDir)\_internal\PySide6\QtGui.pyd" />
+            </Component>
+            <Component Id="cmp8012B76835D1AB3760A5EF3177CD90E0" Directory="dirA757B05E45E75E9F340417F29C846C41" Guid="{D632E8B2-5BB9-4A56-BBE4-44EB28DA627E}">
+                <File Id="filF3DAA902EBDD38A0AECAD27B476657A6" KeyPath="yes" Source="$(var.BuildDir)\_internal\PySide6\QtNetwork.pyd" />
+            </Component>
+            <Component Id="cmpF27C27E1C2762C3A858CCE971D92267C" Directory="dirA757B05E45E75E9F340417F29C846C41" Guid="{F35220BD-C421-4367-B944-A4A7B26E7869}">
+                <File Id="fil3F07ADC83B585609C55EB05776436BE9" KeyPath="yes" Source="$(var.BuildDir)\_internal\PySide6\QtWidgets.pyd" />
+            </Component>
+            <Component Id="cmpACB030A302BFCFE7CC5E4CCCD8862832" Directory="dirA757B05E45E75E9F340417F29C846C41" Guid="{D62EBEB8-456F-4203-A3E1-11B4F66B2DE3}">
+                <File Id="fil1AC21AB949017D2FF19E7362B33E021D" KeyPath="yes" Source="$(var.BuildDir)\_internal\PySide6\VCRUNTIME140.dll" />
+            </Component>
+            <Component Id="cmpFB9EA1E5E86BFB087C160A2CE0868A4E" Directory="dirA757B05E45E75E9F340417F29C846C41" Guid="{788A7E84-C968-4490-BA72-93DC002DBFA9}">
+                <File Id="fil0B8AD41F5632D6D3BF466C7019091F62" KeyPath="yes" Source="$(var.BuildDir)\_internal\PySide6\VCRUNTIME140_1.dll" />
+            </Component>
+            <Component Id="cmp1BC9C0DAAB176ECC7B83DB2D5D08F966" Directory="dir98071387028B731CAD85E04B277F01BB" Guid="{3938913B-60D4-4DDD-82FC-83EA875D4FEF}">
+                <File Id="fil51CE6D75AD4A885B786A84F21736A3BC" KeyPath="yes" Source="$(var.BuildDir)\_internal\PySide6\plugins\generic\qtuiotouchplugin.dll" />
+            </Component>
+            <Component Id="cmpA1ED2F1EEAEC055E2F42B827B26EADF6" Directory="dir15783AE2481798D5613E2B362DD78950" Guid="{F35E2748-3662-409E-9192-B0F2BD2938B7}">
+                <File Id="fil924F0EF05D1023F96729F87BD7283569" KeyPath="yes" Source="$(var.BuildDir)\_internal\PySide6\plugins\iconengines\qsvgicon.dll" />
+            </Component>
+            <Component Id="cmp744719B61975F580FB7ECF1D4C1768A1" Directory="dirF883B277718A4B4FC80B658EF2D0BF00" Guid="{60AF19D8-2205-4E5E-B1AA-5F740FBE4A28}">
+                <File Id="fil887ECA519E59E180A584233ECC75ED4A" KeyPath="yes" Source="$(var.BuildDir)\_internal\PySide6\plugins\imageformats\qgif.dll" />
+            </Component>
+            <Component Id="cmp1DB1BF4A0339434EA9B86B0DFB70CA91" Directory="dirF883B277718A4B4FC80B658EF2D0BF00" Guid="{0683C5A4-3010-48C3-B6AB-AFFD2757ACB7}">
+                <File Id="fil9D079849093D2AB915E54834F720B1A1" KeyPath="yes" Source="$(var.BuildDir)\_internal\PySide6\plugins\imageformats\qicns.dll" />
+            </Component>
+            <Component Id="cmp23566BCC02D6FF9B36873FE7CE22A1D8" Directory="dirF883B277718A4B4FC80B658EF2D0BF00" Guid="{9EAB92D6-8508-4089-90D4-2BFD0342F742}">
+                <File Id="filCAB602DAB5C4DAFB3514BB09AA8ACA93" KeyPath="yes" Source="$(var.BuildDir)\_internal\PySide6\plugins\imageformats\qico.dll" />
+            </Component>
+            <Component Id="cmp850B0A0F315D8557D318AB067DA4E342" Directory="dirF883B277718A4B4FC80B658EF2D0BF00" Guid="{5EDE60DA-AC39-4D4D-BB9A-B0852EF9DC79}">
+                <File Id="fil8B02F9656536CF9F0EF0C043DCC8E9BF" KeyPath="yes" Source="$(var.BuildDir)\_internal\PySide6\plugins\imageformats\qjpeg.dll" />
+            </Component>
+            <Component Id="cmp4218EEDA148A11F19965D6C604E34251" Directory="dirF883B277718A4B4FC80B658EF2D0BF00" Guid="{19480D4E-8C8F-4B79-B696-D46F8629D39D}">
+                <File Id="fil68EBC6EFCC855B3CB66BB49268BB935D" KeyPath="yes" Source="$(var.BuildDir)\_internal\PySide6\plugins\imageformats\qpdf.dll" />
+            </Component>
+            <Component Id="cmp2CB54F2ADB6CDA4B72597721A5A577CA" Directory="dirF883B277718A4B4FC80B658EF2D0BF00" Guid="{8C38B4EE-A87B-4954-850F-C545EE1855E4}">
+                <File Id="fil50DE4BAD8EEF4B5DC2EE894D20C2AC7D" KeyPath="yes" Source="$(var.BuildDir)\_internal\PySide6\plugins\imageformats\qsvg.dll" />
+            </Component>
+            <Component Id="cmpF75504671849C19FE32EC680E5B664D5" Directory="dirF883B277718A4B4FC80B658EF2D0BF00" Guid="{536F778F-2377-4A26-A231-34AF8A486D20}">
+                <File Id="filF3D78075658777084436C51F1F4FE087" KeyPath="yes" Source="$(var.BuildDir)\_internal\PySide6\plugins\imageformats\qtga.dll" />
+            </Component>
+            <Component Id="cmp0A75C83F57FB06930AF749DC4BA2C250" Directory="dirF883B277718A4B4FC80B658EF2D0BF00" Guid="{F003BCF7-A2C6-4694-854C-48BF06A39AF4}">
+                <File Id="filE1DFDEC224FDFFA9AD5967F4E0BFE279" KeyPath="yes" Source="$(var.BuildDir)\_internal\PySide6\plugins\imageformats\qtiff.dll" />
+            </Component>
+            <Component Id="cmp0A298D6FD8F897B7DFA9EEEC791CD6C6" Directory="dirF883B277718A4B4FC80B658EF2D0BF00" Guid="{1DF8F186-B014-49B1-9740-9AB96DA8AC54}">
+                <File Id="filDB95ADFE9C00A3195BDC0AAF8ABBEFF3" KeyPath="yes" Source="$(var.BuildDir)\_internal\PySide6\plugins\imageformats\qwbmp.dll" />
+            </Component>
+            <Component Id="cmp30D19F9393302E22C301F790345F23B7" Directory="dirF883B277718A4B4FC80B658EF2D0BF00" Guid="{EA2A0A14-5720-4AF6-A62D-4EAEBF9A89AD}">
+                <File Id="fil88A13C6328DD5B749895FC4BEE80D19E" KeyPath="yes" Source="$(var.BuildDir)\_internal\PySide6\plugins\imageformats\qwebp.dll" />
+            </Component>
+            <Component Id="cmpD60DB7B9FA45C6C7E9D398FEA3C46C68" Directory="dir0EA407F921F9F44F6BD477C653311388" Guid="{1B576E35-D756-46BF-9FBB-61437959CA96}">
+                <File Id="filFBE1E05AE959F5484B4D2664D1C0CE6D" KeyPath="yes" Source="$(var.BuildDir)\_internal\PySide6\plugins\networkinformation\qnetworklistmanager.dll" />
+            </Component>
+            <Component Id="cmpAF6488468253E004A52E32AC9E91879F" Directory="dirE8B55ED526E2797A5FFEC802000CA70D" Guid="{182AA08C-CFE3-44EB-9BE3-C68D96DAE319}">
+                <File Id="filA3E070E93A5B9D09B833EEAA0522BAFE" KeyPath="yes" Source="$(var.BuildDir)\_internal\PySide6\plugins\platforminputcontexts\qtvirtualkeyboardplugin.dll" />
+            </Component>
+            <Component Id="cmp7F6935B26B6D09C0A4C51CAB23BE3F1F" Directory="dirE34EA792E0B3A621C573D414D2784C8D" Guid="{D49C27E5-4214-4B6B-88F2-2DFBFC17C050}">
+                <File Id="filF62E4E5200994BCF499308FA09C15844" KeyPath="yes" Source="$(var.BuildDir)\_internal\PySide6\plugins\platforms\qdirect2d.dll" />
+            </Component>
+            <Component Id="cmp4F5E7802ECB1EE8CD3417A6BD7E78FD3" Directory="dirE34EA792E0B3A621C573D414D2784C8D" Guid="{3111B359-5E0C-479E-92DA-18173C70A803}">
+                <File Id="filEB3E5BDC688035AC767567538BBE3CA7" KeyPath="yes" Source="$(var.BuildDir)\_internal\PySide6\plugins\platforms\qminimal.dll" />
+            </Component>
+            <Component Id="cmpABCE310B18B983778180143EAC4A6F90" Directory="dirE34EA792E0B3A621C573D414D2784C8D" Guid="{A099FC2E-5719-4050-8306-5DD4BB74C2BC}">
+                <File Id="fil832B1BC8029DFD7A1F1D35AD0F38B3B0" KeyPath="yes" Source="$(var.BuildDir)\_internal\PySide6\plugins\platforms\qoffscreen.dll" />
+            </Component>
+            <Component Id="cmp2B5265F1F0CF118166EF4A4B4DEF46A6" Directory="dirE34EA792E0B3A621C573D414D2784C8D" Guid="{FE9B1A89-E8E7-4B05-A5B6-F63AA5136FCA}">
+                <File Id="filBE7B28C0796473485CE8AF62B29E6ABE" KeyPath="yes" Source="$(var.BuildDir)\_internal\PySide6\plugins\platforms\qwindows.dll" />
+            </Component>
+            <Component Id="cmp4762755149A684FCF25FE0BC530B98F3" Directory="dir2FF72816A9DABCFFCCC6AB41A165C3D2" Guid="{DC698FD6-E7DB-4AC9-8FCB-42E400B645BE}">
+                <File Id="fil2AF6189ED1DEFEEA131CD78EFEB45181" KeyPath="yes" Source="$(var.BuildDir)\_internal\PySide6\plugins\styles\qmodernwindowsstyle.dll" />
+            </Component>
+            <Component Id="cmpE6D1CDD16216FB4ED27C47C8C3D6CF66" Directory="dir58E2FBCFAE8B23A779460BF764758301" Guid="{4573D07D-26F4-43C2-8BD8-F0D785CC6229}">
+                <File Id="filDE3E148B104535F484A29127C4962CF3" KeyPath="yes" Source="$(var.BuildDir)\_internal\PySide6\plugins\tls\qcertonlybackend.dll" />
+            </Component>
+            <Component Id="cmp305189BD019FC0EA15660EC9C9B51458" Directory="dir58E2FBCFAE8B23A779460BF764758301" Guid="{6AEC03A2-E811-45B3-AA67-7AC67A8C7BE4}">
+                <File Id="fil13D90C049015116484A122E884C55518" KeyPath="yes" Source="$(var.BuildDir)\_internal\PySide6\plugins\tls\qopensslbackend.dll" />
+            </Component>
+            <Component Id="cmpA40D48621BF3760835A4EEC265BEC6DC" Directory="dir58E2FBCFAE8B23A779460BF764758301" Guid="{B6923E5D-B034-44F7-BF20-54F957ADCD4B}">
+                <File Id="fil0AC5DF500461DF8B63F8654D14310CFC" KeyPath="yes" Source="$(var.BuildDir)\_internal\PySide6\plugins\tls\qschannelbackend.dll" />
+            </Component>
+            <Component Id="cmp0C85C63B3D3F39628BA15E05B3FBFEBA" Directory="dir456EC6735F9F3FF6A05355D879265DF2" Guid="{DBA1C92D-6387-4802-B162-F6A0B42B38D8}">
+                <File Id="fil2D580398309D884B91D7CB004496FA92" KeyPath="yes" Source="$(var.BuildDir)\_internal\PySide6\translations\qtbase_ar.qm" />
+            </Component>
+            <Component Id="cmp96A3C58B6F9CD14A94257E8C23721174" Directory="dir456EC6735F9F3FF6A05355D879265DF2" Guid="{59248483-41F2-4A9B-BEE3-481A533335FB}">
+                <File Id="fil7ABC586C32B95B6BF069E583136AB459" KeyPath="yes" Source="$(var.BuildDir)\_internal\PySide6\translations\qtbase_bg.qm" />
+            </Component>
+            <Component Id="cmp8831BBF6029E5BE5031ED327328BB8A1" Directory="dir456EC6735F9F3FF6A05355D879265DF2" Guid="{8216D560-3390-4CEF-83E1-C569926AEE73}">
+                <File Id="fil02B265DDEABEBDDE85DEB6D1D10E1F6C" KeyPath="yes" Source="$(var.BuildDir)\_internal\PySide6\translations\qtbase_ca.qm" />
+            </Component>
+            <Component Id="cmp5D7B955859C193163A08D154C3F444AB" Directory="dir456EC6735F9F3FF6A05355D879265DF2" Guid="{1CF65101-5017-4B13-9819-1D529DD3CC95}">
+                <File Id="fil3B2918A71EFFC5A9440DF952243A1BE4" KeyPath="yes" Source="$(var.BuildDir)\_internal\PySide6\translations\qtbase_cs.qm" />
+            </Component>
+            <Component Id="cmp29F438908CBCFC98947E0628AA18F490" Directory="dir456EC6735F9F3FF6A05355D879265DF2" Guid="{5D945213-4FD9-4FD1-B87F-E3197B446A42}">
+                <File Id="fil040A78E2118EA2C07732A7F5D7D132F6" KeyPath="yes" Source="$(var.BuildDir)\_internal\PySide6\translations\qtbase_da.qm" />
+            </Component>
+            <Component Id="cmpF8624072DDAB056DE7014755E054AF8E" Directory="dir456EC6735F9F3FF6A05355D879265DF2" Guid="{00CE4686-D936-4649-AACE-9BEC7D6DA297}">
+                <File Id="fil1D7AF54785DFE5C8E6E60767DDFD9373" KeyPath="yes" Source="$(var.BuildDir)\_internal\PySide6\translations\qtbase_de.qm" />
+            </Component>
+            <Component Id="cmp6FDE688B3CA072D23D8DF3B7544424BB" Directory="dir456EC6735F9F3FF6A05355D879265DF2" Guid="{A231B8A8-6D05-4934-AA4C-83A4E745C8AA}">
+                <File Id="fil912BA37918955ECC26527EC9680B983A" KeyPath="yes" Source="$(var.BuildDir)\_internal\PySide6\translations\qtbase_en.qm" />
+            </Component>
+            <Component Id="cmp8A812572E08844BE4A7D3121CD36007D" Directory="dir456EC6735F9F3FF6A05355D879265DF2" Guid="{895C46F0-F20C-4D06-B108-F9F4B399C30C}">
+                <File Id="fil6CCC0F345C57A98F265601160495F54C" KeyPath="yes" Source="$(var.BuildDir)\_internal\PySide6\translations\qtbase_es.qm" />
+            </Component>
+            <Component Id="cmp9156EF44E0AC57FDB45B9E51F5C9AF0C" Directory="dir456EC6735F9F3FF6A05355D879265DF2" Guid="{20B23719-C591-4305-B939-5B91748A0FAF}">
+                <File Id="fil2FC1C2DEFAC5B5E1462FBB6F5148898E" KeyPath="yes" Source="$(var.BuildDir)\_internal\PySide6\translations\qtbase_fa.qm" />
+            </Component>
+            <Component Id="cmpD70384BE07C07B78F0840A9E91C6DB7A" Directory="dir456EC6735F9F3FF6A05355D879265DF2" Guid="{D800FF0E-A54A-4175-A4FD-1FA86C1C1B55}">
+                <File Id="fil5561DFAD3F115262DD0E22B75FAC2692" KeyPath="yes" Source="$(var.BuildDir)\_internal\PySide6\translations\qtbase_fi.qm" />
+            </Component>
+            <Component Id="cmp688F48285569EC660BCA59510304591C" Directory="dir456EC6735F9F3FF6A05355D879265DF2" Guid="{D48BFDCA-F279-43CB-9FE2-01F81F90969A}">
+                <File Id="fil145C47098B1C9BDE06D0587A83E18A26" KeyPath="yes" Source="$(var.BuildDir)\_internal\PySide6\translations\qtbase_fr.qm" />
+            </Component>
+            <Component Id="cmpDD2DE3F95C8B0ED4A59DA44F68D1C5B8" Directory="dir456EC6735F9F3FF6A05355D879265DF2" Guid="{47949295-FC7A-4E38-9067-3AA72E0704C1}">
+                <File Id="fil7BD72E5A8F8FB8B322A52C221DFA1B1F" KeyPath="yes" Source="$(var.BuildDir)\_internal\PySide6\translations\qtbase_gd.qm" />
+            </Component>
+            <Component Id="cmpD4DB67C5DA13AEBD271BBEC6C639B778" Directory="dir456EC6735F9F3FF6A05355D879265DF2" Guid="{1F8167EE-DCAD-47D8-93D9-D6C6889E3EB9}">
+                <File Id="filD02E5346840AF276CB7613970844CFAA" KeyPath="yes" Source="$(var.BuildDir)\_internal\PySide6\translations\qtbase_he.qm" />
+            </Component>
+            <Component Id="cmp5AF3E0F7B377013E5534EEA7BAFD9F23" Directory="dir456EC6735F9F3FF6A05355D879265DF2" Guid="{0207355F-A304-4D18-A835-A2E6F0C96B23}">
+                <File Id="filDCA6AB414E604228129DE4DF1FD67CF1" KeyPath="yes" Source="$(var.BuildDir)\_internal\PySide6\translations\qtbase_hr.qm" />
+            </Component>
+            <Component Id="cmp1DFBECB7CDF52EDD46AAD57EE31193BF" Directory="dir456EC6735F9F3FF6A05355D879265DF2" Guid="{02261B67-F216-47C4-8333-3F71C44BE4CB}">
+                <File Id="fil9612D8CC3B7C1C75F6B046C13D8F7DE9" KeyPath="yes" Source="$(var.BuildDir)\_internal\PySide6\translations\qtbase_hu.qm" />
+            </Component>
+            <Component Id="cmpAD71032981A591EC76173E3851BB723C" Directory="dir456EC6735F9F3FF6A05355D879265DF2" Guid="{7A38F6CA-3963-4450-AAFC-D765A1D2073F}">
+                <File Id="fil9F76EE4199D08D64E081419461A126DE" KeyPath="yes" Source="$(var.BuildDir)\_internal\PySide6\translations\qtbase_it.qm" />
+            </Component>
+            <Component Id="cmp6287BEAB76A5D0CE51BE203C3D53A3AE" Directory="dir456EC6735F9F3FF6A05355D879265DF2" Guid="{2C03DD3C-C7D3-4A40-AFD2-3789DDC8E072}">
+                <File Id="fil0545A24C38342572CF709091A3D89E76" KeyPath="yes" Source="$(var.BuildDir)\_internal\PySide6\translations\qtbase_ja.qm" />
+            </Component>
+            <Component Id="cmpFA042F9D59C79E83345A3D6FCCD8D64D" Directory="dir456EC6735F9F3FF6A05355D879265DF2" Guid="{47A0FB3D-C7D1-4FF0-889A-D0037D0B3BA7}">
+                <File Id="filA724486809373277938C4A80424D1C94" KeyPath="yes" Source="$(var.BuildDir)\_internal\PySide6\translations\qtbase_ka.qm" />
+            </Component>
+            <Component Id="cmp331AAA8E975974FB18ED3470DC7E887B" Directory="dir456EC6735F9F3FF6A05355D879265DF2" Guid="{3D5563BE-8FA4-4B9C-8E15-3A3123383565}">
+                <File Id="fil92BFC1FDC54A4087BBFCF1490507BC71" KeyPath="yes" Source="$(var.BuildDir)\_internal\PySide6\translations\qtbase_kk.qm" />
+            </Component>
+            <Component Id="cmpB63621E9791B7F105A4E18C190A41756" Directory="dir456EC6735F9F3FF6A05355D879265DF2" Guid="{9D13F90D-D07F-43ED-962D-A4EBBFC2BB91}">
+                <File Id="fil4258D9699CE3DDE93DED218A9436B13C" KeyPath="yes" Source="$(var.BuildDir)\_internal\PySide6\translations\qtbase_ko.qm" />
+            </Component>
+            <Component Id="cmp2FC787737B9B186540E68F2B9A2C789F" Directory="dir456EC6735F9F3FF6A05355D879265DF2" Guid="{B08A0015-2F1D-43A3-967F-A9F591154418}">
+                <File Id="fil7697FBA933565D70B56536F41AF94B58" KeyPath="yes" Source="$(var.BuildDir)\_internal\PySide6\translations\qtbase_lg.qm" />
+            </Component>
+            <Component Id="cmp9877741DA52346E4A1B097092BB58950" Directory="dir456EC6735F9F3FF6A05355D879265DF2" Guid="{2EB2AE20-A9AD-4894-8F6A-AB2A31920E3A}">
+                <File Id="filBE39F1FC69AC3786AA1B0CCC4DFEBBF7" KeyPath="yes" Source="$(var.BuildDir)\_internal\PySide6\translations\qtbase_lv.qm" />
+            </Component>
+            <Component Id="cmpDB0F2738A1DE6279F8EEC8663578103D" Directory="dir456EC6735F9F3FF6A05355D879265DF2" Guid="{74E39841-8928-4CE0-ADED-C10C7D722634}">
+                <File Id="fil4E797FD4A6CB20565C0D383FED021DFD" KeyPath="yes" Source="$(var.BuildDir)\_internal\PySide6\translations\qtbase_nl.qm" />
+            </Component>
+            <Component Id="cmpF27D8B36157D540C93A1B77CBAE25BFE" Directory="dir456EC6735F9F3FF6A05355D879265DF2" Guid="{2E6FD15A-26F9-4C8F-B132-A5A861BBEA58}">
+                <File Id="filE0D27633455F6E12DAEC5206D23CC2B2" KeyPath="yes" Source="$(var.BuildDir)\_internal\PySide6\translations\qtbase_nn.qm" />
+            </Component>
+            <Component Id="cmpB18638E91160EA1F422499E454C4306C" Directory="dir456EC6735F9F3FF6A05355D879265DF2" Guid="{831FC098-C7AF-4DCB-92AE-C7B4631121D0}">
+                <File Id="fil5D23D26733C8B9903ACE5E59C66295F9" KeyPath="yes" Source="$(var.BuildDir)\_internal\PySide6\translations\qtbase_pl.qm" />
+            </Component>
+            <Component Id="cmp855CCEEFB9C0024F4C3ED970CF6F3EE8" Directory="dir456EC6735F9F3FF6A05355D879265DF2" Guid="{2392751A-2B5D-4B89-A21F-A22810C2E563}">
+                <File Id="fil3A4CC3F2F65B60D0674AEA03C0A203CB" KeyPath="yes" Source="$(var.BuildDir)\_internal\PySide6\translations\qtbase_pt_BR.qm" />
+            </Component>
+            <Component Id="cmpB5E07587FD870171E5077DD71FA4CA99" Directory="dir456EC6735F9F3FF6A05355D879265DF2" Guid="{FA38C3D8-7D0A-4A1C-BB82-3BC94DAF5122}">
+                <File Id="filCC7C524A12D3486FA55BD95C4274B4CB" KeyPath="yes" Source="$(var.BuildDir)\_internal\PySide6\translations\qtbase_ru.qm" />
+            </Component>
+            <Component Id="cmp85C47ED36ADF357095E25E3201BD19D1" Directory="dir456EC6735F9F3FF6A05355D879265DF2" Guid="{91A0B36F-EDBE-40C2-ADB8-64D826E1143B}">
+                <File Id="fil1463B675E54AD040A0F5ACF3D98183D3" KeyPath="yes" Source="$(var.BuildDir)\_internal\PySide6\translations\qtbase_sk.qm" />
+            </Component>
+            <Component Id="cmp68F9FAF2176360D9B529A7CC23004434" Directory="dir456EC6735F9F3FF6A05355D879265DF2" Guid="{1B95DC7C-8094-43FD-A893-DAEC6FCE08B9}">
+                <File Id="fil875ADB9C4735C0615397C3888588D3A7" KeyPath="yes" Source="$(var.BuildDir)\_internal\PySide6\translations\qtbase_sv.qm" />
+            </Component>
+            <Component Id="cmp9FE804325E7E4E7341D8795D2B38AD96" Directory="dir456EC6735F9F3FF6A05355D879265DF2" Guid="{E29E44A2-C431-44F7-BCC3-9CA9009E6C88}">
+                <File Id="filEC77D9400479C87C6264F8A47B28FA69" KeyPath="yes" Source="$(var.BuildDir)\_internal\PySide6\translations\qtbase_tr.qm" />
+            </Component>
+            <Component Id="cmp03C04F49992DADA2B0743EF8CB9E319D" Directory="dir456EC6735F9F3FF6A05355D879265DF2" Guid="{6FBA53CE-1ADB-48C7-9969-49E93F244BB9}">
+                <File Id="fil0CDEE1A268C2ABA0131FD2A007BC2ED9" KeyPath="yes" Source="$(var.BuildDir)\_internal\PySide6\translations\qtbase_uk.qm" />
+            </Component>
+            <Component Id="cmpBF23D7AB8C8DD4AA3C443A97519AEB02" Directory="dir456EC6735F9F3FF6A05355D879265DF2" Guid="{64313FD7-795F-4E51-ACE3-8E14308BDA68}">
+                <File Id="fil99124DF100EE7409E7C8A3256F87597A" KeyPath="yes" Source="$(var.BuildDir)\_internal\PySide6\translations\qtbase_zh_CN.qm" />
+            </Component>
+            <Component Id="cmp1B261844096F10736D43D011AEC1AA57" Directory="dir456EC6735F9F3FF6A05355D879265DF2" Guid="{04450795-D504-4879-A989-5AE51BAC77BE}">
+                <File Id="fil7F361D50F096743C6A3F107C10570C8C" KeyPath="yes" Source="$(var.BuildDir)\_internal\PySide6\translations\qtbase_zh_TW.qm" />
+            </Component>
+            <Component Id="cmp9F7D9CF20C3065E20F952D080D2A215B" Directory="dir456EC6735F9F3FF6A05355D879265DF2" Guid="{AFE38598-0609-47B7-BAC6-555D9C6159EC}">
+                <File Id="fil70D62419E1A9BCFC52E5B1E6712A58E0" KeyPath="yes" Source="$(var.BuildDir)\_internal\PySide6\translations\qt_ar.qm" />
+            </Component>
+            <Component Id="cmp12F17480FBDB1B225464F55576EE3600" Directory="dir456EC6735F9F3FF6A05355D879265DF2" Guid="{154467F1-2310-4370-932D-14C91CCAF44E}">
+                <File Id="filC247249E0FE192685EDFC19D0CD7EFFF" KeyPath="yes" Source="$(var.BuildDir)\_internal\PySide6\translations\qt_bg.qm" />
+            </Component>
+            <Component Id="cmpD39C130B9320B9EB2D9B3CAD3696A576" Directory="dir456EC6735F9F3FF6A05355D879265DF2" Guid="{4D1D0C04-B050-4AAC-BB87-9BE16906CF74}">
+                <File Id="fil8F09691AE58AB1D5742C597EB7A6BB89" KeyPath="yes" Source="$(var.BuildDir)\_internal\PySide6\translations\qt_ca.qm" />
+            </Component>
+            <Component Id="cmpAFEA4C1604861DAAED04368486F753B7" Directory="dir456EC6735F9F3FF6A05355D879265DF2" Guid="{B2BB49A3-4D7D-48B4-AF41-721ADE5353A3}">
+                <File Id="fil6E8D3D1E2461101AC130AC3E1456AFF1" KeyPath="yes" Source="$(var.BuildDir)\_internal\PySide6\translations\qt_cs.qm" />
+            </Component>
+            <Component Id="cmpFA6F8EEA8CD5913177778284A55290BC" Directory="dir456EC6735F9F3FF6A05355D879265DF2" Guid="{B63275F9-C834-4F4D-A32C-888354D626AD}">
+                <File Id="fil40FFD8987C2C3BEC178D630C45F19EAC" KeyPath="yes" Source="$(var.BuildDir)\_internal\PySide6\translations\qt_da.qm" />
+            </Component>
+            <Component Id="cmpE1D12F64514D0519C03E1EE975D9EAE7" Directory="dir456EC6735F9F3FF6A05355D879265DF2" Guid="{CCA818A1-249B-410F-A999-A3C11E679F49}">
+                <File Id="filCB66A3A62CC22E357DFC043ADC894749" KeyPath="yes" Source="$(var.BuildDir)\_internal\PySide6\translations\qt_de.qm" />
+            </Component>
+            <Component Id="cmpA69482C0B1D6E4026DAFE1B07291478A" Directory="dir456EC6735F9F3FF6A05355D879265DF2" Guid="{437CD8EB-C614-4D1B-9F28-7316AD3E0876}">
+                <File Id="fil3C475B084CA242E3A36E6B285B1AAB9F" KeyPath="yes" Source="$(var.BuildDir)\_internal\PySide6\translations\qt_en.qm" />
+            </Component>
+            <Component Id="cmpDD5AD6762408D3E1DF14874C2770D11E" Directory="dir456EC6735F9F3FF6A05355D879265DF2" Guid="{DC704D2C-C20A-4DBB-98B7-75616BCD1068}">
+                <File Id="fil937170EC8DDD9B23E977F88048DFC315" KeyPath="yes" Source="$(var.BuildDir)\_internal\PySide6\translations\qt_es.qm" />
+            </Component>
+            <Component Id="cmp16948B0432B9F99F3C22B00E98F63F42" Directory="dir456EC6735F9F3FF6A05355D879265DF2" Guid="{1433104C-76C5-45CE-B0E5-0CEF972CECD6}">
+                <File Id="fil1165891F7EC9494B2E86AAC4BBA1D280" KeyPath="yes" Source="$(var.BuildDir)\_internal\PySide6\translations\qt_fa.qm" />
+            </Component>
+            <Component Id="cmp3B1143456223CB3B28129A15160ED80B" Directory="dir456EC6735F9F3FF6A05355D879265DF2" Guid="{89F8DFCF-A361-4E81-ADAF-E22EA61F4F1B}">
+                <File Id="fil87DC9B64D8BC62B960F0978C6F23C327" KeyPath="yes" Source="$(var.BuildDir)\_internal\PySide6\translations\qt_fi.qm" />
+            </Component>
+            <Component Id="cmp2842DB1D7FA764DBBAA2EA330E673F11" Directory="dir456EC6735F9F3FF6A05355D879265DF2" Guid="{38851867-E98C-42BA-8011-E934D6BF550D}">
+                <File Id="filBF669F6E88063BA436449413C83955BD" KeyPath="yes" Source="$(var.BuildDir)\_internal\PySide6\translations\qt_fr.qm" />
+            </Component>
+            <Component Id="cmpBA1A0652588E138A2726A8E03A901BFA" Directory="dir456EC6735F9F3FF6A05355D879265DF2" Guid="{DD62AD43-FD45-484D-837B-60F58C1C08C8}">
+                <File Id="filDDA9A954E3B7705008856C5A561B9DD1" KeyPath="yes" Source="$(var.BuildDir)\_internal\PySide6\translations\qt_gd.qm" />
+            </Component>
+            <Component Id="cmp811CDE6F5A706095CFBBFFCFE558CCF3" Directory="dir456EC6735F9F3FF6A05355D879265DF2" Guid="{717731F3-16CF-466B-82A7-8816B69A1AF6}">
+                <File Id="filAAAB0853EA50C9A8EE456FF7CC32C646" KeyPath="yes" Source="$(var.BuildDir)\_internal\PySide6\translations\qt_gl.qm" />
+            </Component>
+            <Component Id="cmp5E976C5A50640E905A3E1F1E62181916" Directory="dir456EC6735F9F3FF6A05355D879265DF2" Guid="{4B1F0A6D-7C65-4A86-A9D7-EAF5FABBE463}">
+                <File Id="fil8EC15283B776AF9B3B62B1664FD89F7F" KeyPath="yes" Source="$(var.BuildDir)\_internal\PySide6\translations\qt_he.qm" />
+            </Component>
+            <Component Id="cmpF3FBE5B9056EF215619089CA463ED878" Directory="dir456EC6735F9F3FF6A05355D879265DF2" Guid="{720E1706-7EAE-474D-8B20-E7599339FBD6}">
+                <File Id="fil7CA873E13075F57C4A434C0FB824E373" KeyPath="yes" Source="$(var.BuildDir)\_internal\PySide6\translations\qt_help_ar.qm" />
+            </Component>
+            <Component Id="cmpE331D57F7F5E149BA844CC063FF4EA17" Directory="dir456EC6735F9F3FF6A05355D879265DF2" Guid="{63DF70BE-3151-43B8-9186-DFB9E5475133}">
+                <File Id="filC110D7821CF3E66A635EB0418B8931BB" KeyPath="yes" Source="$(var.BuildDir)\_internal\PySide6\translations\qt_help_bg.qm" />
+            </Component>
+            <Component Id="cmpC1EDEF0AFAB2C7A6AC0B5DD2E0F54A65" Directory="dir456EC6735F9F3FF6A05355D879265DF2" Guid="{A033D417-50E0-4720-AF5C-6EC3EB8D7698}">
+                <File Id="fil0126596B67D43E3F2347B2019C9CBA00" KeyPath="yes" Source="$(var.BuildDir)\_internal\PySide6\translations\qt_help_ca.qm" />
+            </Component>
+            <Component Id="cmpA5A4EE4DA71D6F483C30509162D6EA7E" Directory="dir456EC6735F9F3FF6A05355D879265DF2" Guid="{4DE3827A-6C29-4527-9792-A6A6AA4403F6}">
+                <File Id="fil32F7177B7A775769442195C76AE32ABB" KeyPath="yes" Source="$(var.BuildDir)\_internal\PySide6\translations\qt_help_cs.qm" />
+            </Component>
+            <Component Id="cmp5F7B8C522EB6EAE8DC37CCD7D22CC2F4" Directory="dir456EC6735F9F3FF6A05355D879265DF2" Guid="{8FDEB36E-7EDD-412B-BFBD-237441BAE296}">
+                <File Id="fil529E2A5961EB4FD414826C4BD1F72AE4" KeyPath="yes" Source="$(var.BuildDir)\_internal\PySide6\translations\qt_help_da.qm" />
+            </Component>
+            <Component Id="cmp9BCBEA93D98A36C1EB69E49D2215C18F" Directory="dir456EC6735F9F3FF6A05355D879265DF2" Guid="{CD2FFFCA-6D20-4D84-A2D1-A906DA776D4B}">
+                <File Id="filDE2437A32EE7937DCC76D15CAEA0AB7F" KeyPath="yes" Source="$(var.BuildDir)\_internal\PySide6\translations\qt_help_de.qm" />
+            </Component>
+            <Component Id="cmp6EE5286812FB3FF896F2DF16A1D6C135" Directory="dir456EC6735F9F3FF6A05355D879265DF2" Guid="{7208539C-BE19-44E9-9DDD-93DF57FB164F}">
+                <File Id="fil21B895D15A927417D42841C7EE8443A4" KeyPath="yes" Source="$(var.BuildDir)\_internal\PySide6\translations\qt_help_en.qm" />
+            </Component>
+            <Component Id="cmp68EFDF35AED651F06EA3FE013DEB0F5F" Directory="dir456EC6735F9F3FF6A05355D879265DF2" Guid="{BD1B28E4-CB2A-48B6-8EC6-7CAB346C8ED2}">
+                <File Id="fil64B798F14DC7E5EE384B2F51516CD65E" KeyPath="yes" Source="$(var.BuildDir)\_internal\PySide6\translations\qt_help_es.qm" />
+            </Component>
+            <Component Id="cmpCEE2CB5776E0A2221AE880B99962536D" Directory="dir456EC6735F9F3FF6A05355D879265DF2" Guid="{08A8D3D7-29B7-43C9-8DEF-B5D2FFC443D3}">
+                <File Id="fil8547A0BDEA48B07A87DD2118DA51BF05" KeyPath="yes" Source="$(var.BuildDir)\_internal\PySide6\translations\qt_help_fr.qm" />
+            </Component>
+            <Component Id="cmp3AA9B68179717FB77F42242B4E7D2C13" Directory="dir456EC6735F9F3FF6A05355D879265DF2" Guid="{B8EEC1F4-16D0-4953-9FED-9D00AF9C7B13}">
+                <File Id="filE7E51DDF02524958590D786DF725FB7C" KeyPath="yes" Source="$(var.BuildDir)\_internal\PySide6\translations\qt_help_gl.qm" />
+            </Component>
+            <Component Id="cmp3D822AF2BAD663B20B3195C9FDA212FF" Directory="dir456EC6735F9F3FF6A05355D879265DF2" Guid="{66294FE5-B6C6-44EB-868A-ED6B731236D3}">
+                <File Id="filFEF23E1780C0907D873B71A439DADB93" KeyPath="yes" Source="$(var.BuildDir)\_internal\PySide6\translations\qt_help_hr.qm" />
+            </Component>
+            <Component Id="cmp62CC4D0E8B36383A63598678268C55AB" Directory="dir456EC6735F9F3FF6A05355D879265DF2" Guid="{51C1C3BD-D0D4-488E-A5E5-D4087467D77C}">
+                <File Id="filBEDD4DD6E07AF352E228B65C0A3D090B" KeyPath="yes" Source="$(var.BuildDir)\_internal\PySide6\translations\qt_help_hu.qm" />
+            </Component>
+            <Component Id="cmp05A93631DCE4D7FB4044E7C1D5DE1F3C" Directory="dir456EC6735F9F3FF6A05355D879265DF2" Guid="{76A86D8A-1367-4163-A40E-C955845D743A}">
+                <File Id="fil38884731D932C784992FC59989BCF209" KeyPath="yes" Source="$(var.BuildDir)\_internal\PySide6\translations\qt_help_it.qm" />
+            </Component>
+            <Component Id="cmp6EF4910968AEB17D5BAEB480AF443774" Directory="dir456EC6735F9F3FF6A05355D879265DF2" Guid="{3A60A8F5-7FD1-4D75-A4B4-D506D3F8B221}">
+                <File Id="fil46637853E845461021C9A0ACDCD0CD2D" KeyPath="yes" Source="$(var.BuildDir)\_internal\PySide6\translations\qt_help_ja.qm" />
+            </Component>
+            <Component Id="cmpB02F76B4C8520D3018F130EF3FF7BF15" Directory="dir456EC6735F9F3FF6A05355D879265DF2" Guid="{01B4C84B-93CB-40D2-B8DF-0724C61D3A96}">
+                <File Id="fil55C3E8986A565B5CC8ECDDAC318EC89B" KeyPath="yes" Source="$(var.BuildDir)\_internal\PySide6\translations\qt_help_ka.qm" />
+            </Component>
+            <Component Id="cmp8A9D074BC863B1C817786BB08C5CE8B4" Directory="dir456EC6735F9F3FF6A05355D879265DF2" Guid="{904E2E9D-7B29-4926-A41D-91D88C189F99}">
+                <File Id="filB51BA402D666174BCF08FAB5FF763031" KeyPath="yes" Source="$(var.BuildDir)\_internal\PySide6\translations\qt_help_kk.qm" />
+            </Component>
+            <Component Id="cmp382FC2D2EC83BF8CB08CCC609D4A33C8" Directory="dir456EC6735F9F3FF6A05355D879265DF2" Guid="{63DF3110-BCE1-4277-A522-16BED791950F}">
+                <File Id="filBF7508478F512802ACA4E87C328AF70A" KeyPath="yes" Source="$(var.BuildDir)\_internal\PySide6\translations\qt_help_ko.qm" />
+            </Component>
+            <Component Id="cmp4BD0977848EA60E306240AA41AA6F1F4" Directory="dir456EC6735F9F3FF6A05355D879265DF2" Guid="{467939D9-A3A1-4074-93BD-70C772B66ECD}">
+                <File Id="fil1518B2D18A071313C2BA5FB6CFD853CA" KeyPath="yes" Source="$(var.BuildDir)\_internal\PySide6\translations\qt_help_nl.qm" />
+            </Component>
+            <Component Id="cmpB61F4DD5A7BA93ED66C41668C0DF8F1B" Directory="dir456EC6735F9F3FF6A05355D879265DF2" Guid="{3E7A6BE6-B217-4B7C-B8D2-5321A011A8A1}">
+                <File Id="fil51CACE5CBC3D274F45782819C642CB34" KeyPath="yes" Source="$(var.BuildDir)\_internal\PySide6\translations\qt_help_nn.qm" />
+            </Component>
+            <Component Id="cmp04F8F0E6E72BE24154730A0D62AD5DEA" Directory="dir456EC6735F9F3FF6A05355D879265DF2" Guid="{0A0BC4D2-390B-4A23-8323-42617ECAC7BE}">
+                <File Id="fil1AD21D3865AF3F70055EC74F71743C73" KeyPath="yes" Source="$(var.BuildDir)\_internal\PySide6\translations\qt_help_pl.qm" />
+            </Component>
+            <Component Id="cmp5680376C799B14FCCB571578EB9D11FA" Directory="dir456EC6735F9F3FF6A05355D879265DF2" Guid="{3B28175F-A26C-49ED-81C2-EAC3C495F3C2}">
+                <File Id="fil2F2544A47F20B4167D5E443CDFEC3D85" KeyPath="yes" Source="$(var.BuildDir)\_internal\PySide6\translations\qt_help_pt_BR.qm" />
+            </Component>
+            <Component Id="cmpE6C8E2162446755A0FD86983ED748F8A" Directory="dir456EC6735F9F3FF6A05355D879265DF2" Guid="{E31CAC23-6C32-4B30-9B60-EF47F0DB20E2}">
+                <File Id="fil211CFBBFB71F8BBC96D4702DE643A17D" KeyPath="yes" Source="$(var.BuildDir)\_internal\PySide6\translations\qt_help_ru.qm" />
+            </Component>
+            <Component Id="cmpA9B9C012CAA8833A17167FF03E68C4FD" Directory="dir456EC6735F9F3FF6A05355D879265DF2" Guid="{A4DDE13E-69D9-4DD9-BACF-D8565B262B37}">
+                <File Id="fil2DA43B41A890134859F583A231144890" KeyPath="yes" Source="$(var.BuildDir)\_internal\PySide6\translations\qt_help_sk.qm" />
+            </Component>
+            <Component Id="cmp5E1094DA926390B3801307604E35422F" Directory="dir456EC6735F9F3FF6A05355D879265DF2" Guid="{027A922C-1313-44CE-8DCF-0146230E4FBD}">
+                <File Id="filCC5E4061BDF03A48EFA73C925CB6E9BF" KeyPath="yes" Source="$(var.BuildDir)\_internal\PySide6\translations\qt_help_sl.qm" />
+            </Component>
+            <Component Id="cmpB786FE1D9A7EFE72B6D6DC775814A6E9" Directory="dir456EC6735F9F3FF6A05355D879265DF2" Guid="{3373F5F9-5B16-4DFB-813C-97AA1E5C8EBD}">
+                <File Id="fil1C2F05F2D253F090547BC558252F2481" KeyPath="yes" Source="$(var.BuildDir)\_internal\PySide6\translations\qt_help_sv.qm" />
+            </Component>
+            <Component Id="cmp06827E914A7BB0B1426B9CBBB09668D4" Directory="dir456EC6735F9F3FF6A05355D879265DF2" Guid="{AF1CFA0F-2001-4DCC-B707-247C9D78110E}">
+                <File Id="filD31AD34B1024A83A3F7070DD6C4B8D37" KeyPath="yes" Source="$(var.BuildDir)\_internal\PySide6\translations\qt_help_tr.qm" />
+            </Component>
+            <Component Id="cmp4D0F2285390B7E98F10C94BCAA0CD307" Directory="dir456EC6735F9F3FF6A05355D879265DF2" Guid="{2D1802C0-14EB-4E74-BF3A-36A500771ECC}">
+                <File Id="filC793683BECF442621895FC21BBF0E2C2" KeyPath="yes" Source="$(var.BuildDir)\_internal\PySide6\translations\qt_help_uk.qm" />
+            </Component>
+            <Component Id="cmp634876E24F8936D292F8B754E6E07EF2" Directory="dir456EC6735F9F3FF6A05355D879265DF2" Guid="{92F91F59-1463-42E1-BFC3-63C9C63B7636}">
+                <File Id="fil70DD6BC721F26CCE84AB34F4406E5414" KeyPath="yes" Source="$(var.BuildDir)\_internal\PySide6\translations\qt_help_zh_CN.qm" />
+            </Component>
+            <Component Id="cmp94E2353515FBF0E24947042E4FE9DB37" Directory="dir456EC6735F9F3FF6A05355D879265DF2" Guid="{EA164086-BC5A-4530-BB98-3CF39D361A02}">
+                <File Id="filB8A5599CAC3D8C81A2DF9368C09E4C1B" KeyPath="yes" Source="$(var.BuildDir)\_internal\PySide6\translations\qt_help_zh_TW.qm" />
+            </Component>
+            <Component Id="cmp34E13341A252745DFF277DB6B62CB5C9" Directory="dir456EC6735F9F3FF6A05355D879265DF2" Guid="{4F7A51FD-6F64-4C81-85F7-03B80C426FD2}">
+                <File Id="fil19EF80748D129B46459DD2B5CDFE2806" KeyPath="yes" Source="$(var.BuildDir)\_internal\PySide6\translations\qt_hr.qm" />
+            </Component>
+            <Component Id="cmpA0CAEF0B84273858524C7272E64D4D3F" Directory="dir456EC6735F9F3FF6A05355D879265DF2" Guid="{011CB15D-E39D-42F3-85E4-13CB15F4FBF2}">
+                <File Id="filC2001B331C7D31409A91E9BF0D905191" KeyPath="yes" Source="$(var.BuildDir)\_internal\PySide6\translations\qt_hu.qm" />
+            </Component>
+            <Component Id="cmpB945455CD8FD309B1FC025E9506D18A4" Directory="dir456EC6735F9F3FF6A05355D879265DF2" Guid="{0ACF79C3-573E-4FFB-BFF7-32EF1607185B}">
+                <File Id="fil7A648588079C9D8CB682B2B7D5F4047B" KeyPath="yes" Source="$(var.BuildDir)\_internal\PySide6\translations\qt_it.qm" />
+            </Component>
+            <Component Id="cmp461FE1E33A4FD544E2AF0C202B2A0761" Directory="dir456EC6735F9F3FF6A05355D879265DF2" Guid="{DB6369ED-A053-4E70-B712-24C727704A70}">
+                <File Id="filAD445782E4D5CC993B4B72B652E1FF25" KeyPath="yes" Source="$(var.BuildDir)\_internal\PySide6\translations\qt_ja.qm" />
+            </Component>
+            <Component Id="cmpD985F2D8735D1883932B21A5AE8F017C" Directory="dir456EC6735F9F3FF6A05355D879265DF2" Guid="{2F6188B0-0ACB-411B-AF37-54E68108BCC9}">
+                <File Id="fil1B13E2B2548079AFA8945FB481929016" KeyPath="yes" Source="$(var.BuildDir)\_internal\PySide6\translations\qt_ka.qm" />
+            </Component>
+            <Component Id="cmp92BD115D2042786FEFDC2DD90CB2F24C" Directory="dir456EC6735F9F3FF6A05355D879265DF2" Guid="{32A6CC65-7157-4BDB-8AAB-70870BCA7AFA}">
+                <File Id="fil8F2AA6EAF2BC5437CEE13B6E8C072E56" KeyPath="yes" Source="$(var.BuildDir)\_internal\PySide6\translations\qt_kk.qm" />
+            </Component>
+            <Component Id="cmpE6103059F7BD32AF2FAA14540C31F13C" Directory="dir456EC6735F9F3FF6A05355D879265DF2" Guid="{D9FBB806-6658-4B54-9A4E-86FB7AE8DC53}">
+                <File Id="filFDDCBBF41A41B4AE7302F8774D25D40A" KeyPath="yes" Source="$(var.BuildDir)\_internal\PySide6\translations\qt_ko.qm" />
+            </Component>
+            <Component Id="cmpF87D9901F0321B48480BF42856F62CF8" Directory="dir456EC6735F9F3FF6A05355D879265DF2" Guid="{6B25F941-C07A-4298-A986-DF29FE95BF6F}">
+                <File Id="fil5AABCDE434176962161C6D6676C06ACF" KeyPath="yes" Source="$(var.BuildDir)\_internal\PySide6\translations\qt_lg.qm" />
+            </Component>
+            <Component Id="cmp8E066CC98383D586B0509D5A1BE0C9DC" Directory="dir456EC6735F9F3FF6A05355D879265DF2" Guid="{71253634-CB6B-4F7A-8022-572C993B5672}">
+                <File Id="filDB224E36B1A5BE3E69DD07C125B60EAA" KeyPath="yes" Source="$(var.BuildDir)\_internal\PySide6\translations\qt_lt.qm" />
+            </Component>
+            <Component Id="cmp2C31B19DE080593A8E6502AAD776D8A4" Directory="dir456EC6735F9F3FF6A05355D879265DF2" Guid="{8A69ABBA-DA54-4FFA-AA2C-FDD2A6AF41BB}">
+                <File Id="filB40C9560AC23267DB3C71E6FCFD86967" KeyPath="yes" Source="$(var.BuildDir)\_internal\PySide6\translations\qt_lv.qm" />
+            </Component>
+            <Component Id="cmp3E5BBB867A23A4A1DB37C14855D167BF" Directory="dir456EC6735F9F3FF6A05355D879265DF2" Guid="{A0223339-5A3B-4426-9F78-7F1275FAA1A7}">
+                <File Id="fil726E28D17AD32A312C410E8DC1486365" KeyPath="yes" Source="$(var.BuildDir)\_internal\PySide6\translations\qt_nl.qm" />
+            </Component>
+            <Component Id="cmp0B208BA0ADF90612DB6FA78A4D6DFA7E" Directory="dir456EC6735F9F3FF6A05355D879265DF2" Guid="{52BC7DDA-C648-4F0A-B253-710E365476AB}">
+                <File Id="filF48B519830066731AF99A7C99DBF1432" KeyPath="yes" Source="$(var.BuildDir)\_internal\PySide6\translations\qt_nn.qm" />
+            </Component>
+            <Component Id="cmp929C264BC2D56A2C3D4D2FFD5B5EF423" Directory="dir456EC6735F9F3FF6A05355D879265DF2" Guid="{2879F994-F129-4D92-958A-7ADA86882D76}">
+                <File Id="filBB6E0F843AFE1AF9B222656CB54DA820" KeyPath="yes" Source="$(var.BuildDir)\_internal\PySide6\translations\qt_pl.qm" />
+            </Component>
+            <Component Id="cmp9533061F34B3B9570C6BBFF2D0DDF2FA" Directory="dir456EC6735F9F3FF6A05355D879265DF2" Guid="{C47C1C22-B1F2-4A14-BAD6-2145C8CF764D}">
+                <File Id="fil204C3C1BA2B141CE0F1006B728780FD9" KeyPath="yes" Source="$(var.BuildDir)\_internal\PySide6\translations\qt_pt_BR.qm" />
+            </Component>
+            <Component Id="cmp45C2922856D9BBFAA8666A420310E248" Directory="dir456EC6735F9F3FF6A05355D879265DF2" Guid="{D3AACE00-C155-4655-AD39-7CEFFD86B54C}">
+                <File Id="filAF2F481A9EAC779CFBC00E94F6B1E0E9" KeyPath="yes" Source="$(var.BuildDir)\_internal\PySide6\translations\qt_pt_PT.qm" />
+            </Component>
+            <Component Id="cmpB011689844CF989F7C19D9903D85076F" Directory="dir456EC6735F9F3FF6A05355D879265DF2" Guid="{11AFCA08-D413-4084-8B42-60CC2D02C2A2}">
+                <File Id="filED3A12BD1F00FBD8BFD4F06C4FFBBAD4" KeyPath="yes" Source="$(var.BuildDir)\_internal\PySide6\translations\qt_ru.qm" />
+            </Component>
+            <Component Id="cmp68B2ECF2CAABAE7F38B064109E59ED99" Directory="dir456EC6735F9F3FF6A05355D879265DF2" Guid="{08A42229-AAF7-4DAA-9DF5-A5FE7ED85FBA}">
+                <File Id="filB3ABC73558A2221B345A7E95A860347B" KeyPath="yes" Source="$(var.BuildDir)\_internal\PySide6\translations\qt_sk.qm" />
+            </Component>
+            <Component Id="cmp4542CD1D494FEDE833A98CAF1CA40F77" Directory="dir456EC6735F9F3FF6A05355D879265DF2" Guid="{95AEADD6-221B-4A06-A6F5-01338E3EC014}">
+                <File Id="filA0FE692795A8F622E59F37AF38850289" KeyPath="yes" Source="$(var.BuildDir)\_internal\PySide6\translations\qt_sl.qm" />
+            </Component>
+            <Component Id="cmpF57A621CFCFDB2A0D4B4988F11BDF11D" Directory="dir456EC6735F9F3FF6A05355D879265DF2" Guid="{24510E7B-2A67-426D-99CE-5EA736240CEE}">
+                <File Id="fil0C277D67553FBF2D6E9B291F10DD13AB" KeyPath="yes" Source="$(var.BuildDir)\_internal\PySide6\translations\qt_sv.qm" />
+            </Component>
+            <Component Id="cmp2D78CC7EF31380420293CCC9942E95B6" Directory="dir456EC6735F9F3FF6A05355D879265DF2" Guid="{2D923E00-126E-4FEC-937D-152E269C2B58}">
+                <File Id="fil436754310D332EB0EE1BE5859015ED44" KeyPath="yes" Source="$(var.BuildDir)\_internal\PySide6\translations\qt_tr.qm" />
+            </Component>
+            <Component Id="cmp22BC3321D8DDAD9195274020C323299A" Directory="dir456EC6735F9F3FF6A05355D879265DF2" Guid="{65F163B4-EFE6-40F2-926F-2B2D51C277F9}">
+                <File Id="fil5DF91CD9657290A0DB530347F6790849" KeyPath="yes" Source="$(var.BuildDir)\_internal\PySide6\translations\qt_uk.qm" />
+            </Component>
+            <Component Id="cmp1E7C190EF6EDA2A05616560C6D5D87DD" Directory="dir456EC6735F9F3FF6A05355D879265DF2" Guid="{1D7B46BD-DB70-430E-A6A6-807BBA08ACD1}">
+                <File Id="filD9AE89F849C96A29D2304398DCCD838F" KeyPath="yes" Source="$(var.BuildDir)\_internal\PySide6\translations\qt_zh_CN.qm" />
+            </Component>
+            <Component Id="cmp4AF7BCA770C8FF9FFDB4DA0AF0863F22" Directory="dir456EC6735F9F3FF6A05355D879265DF2" Guid="{A852368B-BAC2-41FA-842D-4841215DC508}">
+                <File Id="filDCABFC13364CABCD90F39B9CB52F1AE1" KeyPath="yes" Source="$(var.BuildDir)\_internal\PySide6\translations\qt_zh_TW.qm" />
+            </Component>
+            <Component Id="cmpE183EFC536EBCA81019BCB196F9B3D0B" Directory="dir35B9905A950BC221F548960A893BC910" Guid="{4F2F223C-65C2-41F1-AE14-80EE04C7384F}">
+                <File Id="fil52DE880E0D723574F11B4E43A510B161" KeyPath="yes" Source="$(var.BuildDir)\_internal\shiboken6\MSVCP140.dll" />
+            </Component>
+            <Component Id="cmp6510EDBDA444C1C46C1CA79F53D22A33" Directory="dir35B9905A950BC221F548960A893BC910" Guid="{E56A523D-497B-49AB-AA36-BE35F6CB0510}">
+                <File Id="fil2A402B19DFE33418B2AD2A2FE4259713" KeyPath="yes" Source="$(var.BuildDir)\_internal\shiboken6\Shiboken.pyd" />
+            </Component>
+            <Component Id="cmp8FBA3FF88643C8E57BC595BB62FF5606" Directory="dir35B9905A950BC221F548960A893BC910" Guid="{DC5E9AA9-B90F-4E06-B1AD-BB63B417F10C}">
+                <File Id="filCE450564549118039F92F7D384860959" KeyPath="yes" Source="$(var.BuildDir)\_internal\shiboken6\shiboken6.abi3.dll" />
+            </Component>
+            <Component Id="cmp73E45F22B44EE5941153059A0CB37A54" Directory="dir35B9905A950BC221F548960A893BC910" Guid="{9E7FFE96-1B7D-4ED0-B5FD-D69A47A30AA5}">
+                <File Id="fil98AD2D70D0845012C99F684FC70BC49B" KeyPath="yes" Source="$(var.BuildDir)\_internal\shiboken6\VCRUNTIME140.dll" />
+            </Component>
+            <Component Id="cmpD9FCE21044A2DF3AA89708621063313C" Directory="dir35B9905A950BC221F548960A893BC910" Guid="{7AF0630F-6F5F-498A-9A14-97381275A7C1}">
+                <File Id="filCA2F008E7C01C69167872C22AEB04D98" KeyPath="yes" Source="$(var.BuildDir)\_internal\shiboken6\VCRUNTIME140_1.dll" />
+            </Component>
+        </ComponentGroup>
+    </Fragment>
+    <Fragment>
+        <DirectoryRef Id="dir62C344739804D629D9B6B91C2226A19D">
+            <Directory Id="dir0EA407F921F9F44F6BD477C653311388" Name="networkinformation" />
+        </DirectoryRef>
+    </Fragment>
+    <Fragment>
+        <DirectoryRef Id="dir62C344739804D629D9B6B91C2226A19D">
+            <Directory Id="dir15783AE2481798D5613E2B362DD78950" Name="iconengines" />
+        </DirectoryRef>
+    </Fragment>
+    <Fragment>
+        <DirectoryRef Id="dir62C344739804D629D9B6B91C2226A19D">
+            <Directory Id="dir2FF72816A9DABCFFCCC6AB41A165C3D2" Name="styles" />
+        </DirectoryRef>
+    </Fragment>
+    <Fragment>
+        <DirectoryRef Id="dirA55AF069D2625F3FE476404EC66AEC86">
+            <Directory Id="dir35B9905A950BC221F548960A893BC910" Name="shiboken6" />
+        </DirectoryRef>
+    </Fragment>
+    <Fragment>
+        <DirectoryRef Id="dirA757B05E45E75E9F340417F29C846C41">
+            <Directory Id="dir456EC6735F9F3FF6A05355D879265DF2" Name="translations" />
+        </DirectoryRef>
+    </Fragment>
+    <Fragment>
+        <DirectoryRef Id="dir62C344739804D629D9B6B91C2226A19D">
+            <Directory Id="dir58E2FBCFAE8B23A779460BF764758301" Name="tls" />
+        </DirectoryRef>
+    </Fragment>
+    <Fragment>
+        <DirectoryRef Id="dirA757B05E45E75E9F340417F29C846C41">
+            <Directory Id="dir62C344739804D629D9B6B91C2226A19D" Name="plugins" />
+        </DirectoryRef>
+    </Fragment>
+    <Fragment>
+        <DirectoryRef Id="dir62C344739804D629D9B6B91C2226A19D">
+            <Directory Id="dir98071387028B731CAD85E04B277F01BB" Name="generic" />
+        </DirectoryRef>
+    </Fragment>
+    <Fragment>
+        <DirectoryRef Id="dirA55AF069D2625F3FE476404EC66AEC86">
+            <Directory Id="dirA757B05E45E75E9F340417F29C846C41" Name="PySide6" />
+        </DirectoryRef>
+    </Fragment>
+    <Fragment>
+        <DirectoryRef Id="dir62C344739804D629D9B6B91C2226A19D">
+            <Directory Id="dirE34EA792E0B3A621C573D414D2784C8D" Name="platforms" />
+        </DirectoryRef>
+    </Fragment>
+    <Fragment>
+        <DirectoryRef Id="dir62C344739804D629D9B6B91C2226A19D">
+            <Directory Id="dirE8B55ED526E2797A5FFEC802000CA70D" Name="platforminputcontexts" />
+        </DirectoryRef>
+    </Fragment>
+    <Fragment>
+        <DirectoryRef Id="dir62C344739804D629D9B6B91C2226A19D">
+            <Directory Id="dirF883B277718A4B4FC80B658EF2D0BF00" Name="imageformats" />
+        </DirectoryRef>
+    </Fragment>
+</Wix>

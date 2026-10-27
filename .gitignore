@@ -1,0 +1,19 @@
+# 构建产物(由 scripts/build_msi.py 生成)
+build/
+dist/
+# WiX 工具链(免安装, 本地解压, 200MB+ 不入库)
+tools/
+# Python
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.venv/
+venv/
+*.egg-info/
+# IDE
+.idea/
+.vscode/
+*.swp
+# 系统
+Thumbs.db
+.DS_Store

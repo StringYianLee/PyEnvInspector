@@ -1,0 +1,156 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  PyEnv Inspector MSI 安装包主配置 (WiX Toolset 3.14)
+
+  构建前置产物:
+    dist/PyEnvInspector/   <- PyInstaller onedir 输出
+    files.wxs              <- heat 从 dist 目录收割的文件清单
+
+  变量:
+    var.Version    产品版本 (如 1.0.0)
+    var.BuildDir   PyInstaller 输出根目录 (dist)
+-->
+<Wix xmlns="http://schemas.microsoft.com/wix/2006/wi"
+     xmlns:util="http://schemas.microsoft.com/wix/UtilExtension">
+
+  <?define ProductName = "PyEnv Inspector" ?>
+  <?define Vendor = "PyEnvInspector Project" ?>
+
+  <Product Id="*"
+           Name="$(var.ProductName)"
+           Language="2052"
+           Version="$(var.Version)"
+           Manufacturer="$(var.Vendor)"
+           UpgradeCode="7A1C64F2-3B8D-4E29-9C55-0E1D2F3A4B5C">
+
+    <!-- InstallerVersion 500 = Windows 7+;
+         Scope=perMachine: 全机安装(需管理员, 默认交付) | perUser: 免管理员装用户目录 -->
+    <Package InstallerVersion="500"
+             Compressed="yes"
+             InstallScope="$(var.InstallScope)"
+             Description="$(var.ProductName) - Python 环境与包依赖管理工具"
+             Manufacturer="$(var.Vendor)"
+             Languages="2052" />
+
+    <!-- 升级策略: 同 UpgradeCode 且版本更高时自动卸旧装新; 禁止降级 -->
+    <MajorUpgrade AllowDowngrades="no"
+                  Schedule="afterInstallValidate"
+                  DowngradeErrorMessage="已安装更新版本的 [ProductName] ([InstalledVersion])，无法降级安装到 [ProductVersion]。如需覆盖请先卸载现有版本。" />
+
+    <MediaTemplate EmbedCab="yes" />
+
+    <!-- 添加/删除程序中的图标(ARPNOMODIFY 由 WixUI 库提供) -->
+    <Icon Id="AppIcon.exe" SourceFile="$(var.BuildDir)\PyEnvInspector.exe" />
+    <Property Id="ARPPRODUCTICON" Value="AppIcon.exe" />
+
+    <!-- 安装向导 UI (中文 + 可选安装目录 + 许可页) -->
+    <WixVariable Id="WixUILicenseRtf" Value="$(var.RootDir)\assets\installer\license.rtf" />
+    <UI>
+      <UIRef Id="WixUI_InstallDir" />
+      <Property Id="WIXUI_INSTALLDIR" Value="INSTALLDIR" />
+      <Property Id="WIXUI_EXITDIALOGOPTIONALCHECKBOXTEXT"
+                Value="安装完成后立即运行 $(var.ProductName)" />
+      <Publish Dialog="ExitDialog" Control="Finish" Event="DoAction"
+               Value="SetWixShellExecTarget">WIXUI_EXITDIALOGOPTIONALCHECKBOX = 1 AND NOT Installed</Publish>
+      <Publish Dialog="ExitDialog" Control="Finish" Event="DoAction"
+               Value="LaunchApplication">WIXUI_EXITDIALOGOPTIONALCHECKBOX = 1 AND NOT Installed</Publish>
+    </UI>
+
+    <!-- 安装完成后启动应用(经向导 Finish 按钮; 目标路径运行时解析) -->
+    <CustomAction Id="SetWixShellExecTarget"
+                  Property="WixShellExecTarget"
+                  Value="[INSTALLDIR]PyEnvInspector.exe" />
+    <CustomAction Id="LaunchApplication"
+                  BinaryKey="WixCA"
+                  DllEntry="WixShellExec"
+                  Impersonate="yes" />
+
+    <Feature Id="MainApplication"
+             Title="$(var.ProductName)"
+             Description="安装 $(var.ProductName) 主程序、开始菜单与桌面快捷方式。"
+             Level="1"
+             Absent="disallow"
+             AllowAdvertise="no">
+      <ComponentGroupRef Id="AppFiles" />
+      <ComponentRef Id="StartMenuShortcuts" />
+      <ComponentRef Id="DesktopShortcut" />
+    </Feature>
+
+    <Directory Id="TARGETDIR" Name="SourceDir">
+
+      <!-- 主程序目录: perMachine → Program Files; perUser → %LOCALAPPDATA% -->
+      <?if $(var.InstallScope) = "perUser" ?>
+      <Directory Id="LocalAppDataFolder">
+        <Directory Id="VendorDir" Name="$(var.Vendor)">
+          <Directory Id="INSTALLDIR" Name="$(var.ProductName)" />
+        </Directory>
+      </Directory>
+      <?else?>
+      <Directory Id="ProgramFiles64Folder">
+        <Directory Id="VendorDir" Name="$(var.Vendor)">
+          <Directory Id="INSTALLDIR" Name="$(var.ProductName)" />
+        </Directory>
+      </Directory>
+      <?endif?>
+
+      <!-- 开始菜单快捷方式 -->
+      <Directory Id="ProgramMenuFolder">
+        <Directory Id="AppStartMenuDir" Name="$(var.ProductName)">
+          <Component Id="StartMenuShortcuts"
+                     Guid="D4A1E7B2-6C93-4F01-8A2B-51C2F9E7A301">
+            <Shortcut Id="StartMenuAppShortcut"
+                      Name="$(var.ProductName)"
+                      Description="Python 环境与包依赖管理工具"
+                      Target="[INSTALLDIR]PyEnvInspector.exe"
+                      WorkingDirectory="INSTALLDIR"
+                      Icon="AppIcon.exe" />
+            <Shortcut Id="StartMenuUninstallShortcut"
+                      Name="卸载 $(var.ProductName)"
+                      Description="从系统中卸载 $(var.ProductName)"
+                      Target="[SystemFolder]msiexec.exe"
+                      Arguments="/x [ProductCode]" />
+            <RemoveFolder Id="RemoveAppStartMenuDir"
+                          Directory="AppStartMenuDir"
+                          On="uninstall" />
+            <?if $(var.InstallScope) = "perUser" ?>
+            <RegistryValue Root="HKCU"
+                           Key="Software\$(var.Vendor)\$(var.ProductName)"
+                           Name="StartMenuShortcuts"
+                           Type="integer" Value="1" KeyPath="yes" />
+            <?else?>
+            <RegistryValue Root="HKLM"
+                           Key="Software\$(var.Vendor)\$(var.ProductName)"
+                           Name="StartMenuShortcuts"
+                           Type="integer" Value="1" KeyPath="yes" />
+            <?endif?>
+          </Component>
+        </Directory>
+      </Directory>
+
+      <!-- 桌面快捷方式 -->
+      <Directory Id="DesktopFolder">
+        <Component Id="DesktopShortcut"
+                   Guid="D4A1E7B2-6C93-4F01-8A2B-9E77C4B1F302">
+          <Shortcut Id="DesktopAppShortcut"
+                    Name="$(var.ProductName)"
+                    Description="Python 环境与包依赖管理工具"
+                    Target="[INSTALLDIR]PyEnvInspector.exe"
+                    WorkingDirectory="INSTALLDIR"
+                    Icon="AppIcon.exe" />
+          <?if $(var.InstallScope) = "perUser" ?>
+          <RegistryValue Root="HKCU"
+                         Key="Software\$(var.Vendor)\$(var.ProductName)"
+                         Name="DesktopShortcut"
+                         Type="integer" Value="1" KeyPath="yes" />
+          <?else?>
+          <RegistryValue Root="HKLM"
+                         Key="Software\$(var.Vendor)\$(var.ProductName)"
+                         Name="DesktopShortcut"
+                         Type="integer" Value="1" KeyPath="yes" />
+          <?endif?>
+        </Component>
+      </Directory>
+    </Directory>
+
+  </Product>
+</Wix>
