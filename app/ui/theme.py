@@ -16,7 +16,7 @@ _LIGHT = {
     "border": "#e3e7ef",
     "border_strong": "#c9d1e0",
     "text": "#1f2533",
-    "text_muted": "#7a8499",
+    "text_muted": "#5f6979",
     "text_faint": "#aab2c3",
     "primary": "#3d6df2",
     "primary_hover": "#2f5ae0",
@@ -48,35 +48,36 @@ _DARK = {
     "bg": "#12161f",
     "surface": "#1a1f2b",
     "surface_alt": "#232936",
-    "border": "#2a3140",
-    "border_strong": "#3a4354",
-    "text": "#e6e9f0",
-    "text_muted": "#98a1b3",
-    "text_faint": "#6b7488",
-    "primary": "#4f7cff",
-    "primary_hover": "#6b90ff",
-    "primary_soft": "#1e2a4a",
-    "ok": "#35c07a",
-    "ok_soft": "#16301f",
-    "warn": "#f0a13c",
+    "border": "#2f3749",
+    "border_strong": "#414b60",
+    # 深色下正文/次级文字整体提亮(此前 #e6e9f0/#98a1b3 在暗底上偏灰)
+    "text": "#f2f5fa",
+    "text_muted": "#b8c2d4",
+    "text_faint": "#8b95a8",
+    "primary": "#6b9bff",
+    "primary_hover": "#8ab0ff",
+    "primary_soft": "#22304f",
+    "ok": "#4ed08a",
+    "ok_soft": "#14301f",
+    "warn": "#f5b25c",
     "warn_soft": "#3a2a13",
-    "error": "#ff5c69",
-    "error_soft": "#3a1a1e",
-    "info": "#4f7cff",
-    "info_soft": "#1e2a4a",
+    "error": "#ff7b86",
+    "error_soft": "#3d1a1f",
+    "info": "#6b9bff",
+    "info_soft": "#22304f",
     "neutral_soft": "#232936",
     "graph_bg": "#151a24",
-    "edge_normal": "#3d4657",
-    "edge_ok": "#3f7a5c",
-    "edge_conflict": "#ff5c69",
-    "edge_missing": "#f0a13c",
-    "node_normal_border": "#3a4354",
-    "node_ghost_border": "#a9762f",
+    "edge_normal": "#4a5568",
+    "edge_ok": "#4a8f6b",
+    "edge_conflict": "#ff7b86",
+    "edge_missing": "#f5b25c",
+    "node_normal_border": "#414b60",
+    "node_ghost_border": "#b98232",
     "tooltip_bg": "#0d1119",
-    "row_alt": "#1f2532",
-    "on_primary": "#ffffff",
-    "danger_text": "#ff7b86",
-    "success_text": "#4fd08c",
+    "row_alt": "#202633",
+    "on_primary": "#0d1119",
+    "danger_text": "#ff9aa3",
+    "success_text": "#63d99b",
 }
 
 
@@ -90,7 +91,7 @@ class Palette:
     border = "#e3e7ef"
     border_strong = "#c9d1e0"
     text = "#1f2533"
-    text_muted = "#7a8499"
+    text_muted = "#5f6979"
     text_faint = "#aab2c3"
 
     # 品牌色
@@ -170,7 +171,8 @@ def build_qss() -> str:
     font-family: "Segoe UI", "Microsoft YaHei UI", "PingFang SC", sans-serif;
     outline: none;
 }}
-QMainWindow, QWidget#root {{ background: {p.bg}; }}
+QMainWindow, QWidget#root, QDialog, QMessageBox {{ background: {p.bg}; }}
+QDialog QLabel, QMessageBox QLabel {{ color: {p.text}; }}
 QToolTip {{
     background: {p.tooltip_bg}; color: {p.text}; border: 1px solid {p.border_strong};
     padding: 6px 10px; border-radius: 6px; font-size: 12px;
@@ -310,17 +312,42 @@ QStatusBar {{ background: transparent; color: {p.text_muted}; font-size: 12px; }
 """
 
 
-def apply_theme(app) -> None:
-    """应用全局主题与默认字体。"""
+def build_palette():
+    """根据当前色板构造完整 QPalette。
+
+    QSS 只覆盖显式声明的控件; 滚动区视口、表格空白区、对话框底色等
+    由 QPalette 决定 —— 深色主题下若不更新它, 会出现"深色文字 +
+    浅色底"的不可读组合。
+    """
     from PySide6.QtGui import QPalette
 
+    p = QPalette()
+    role = QPalette.ColorRole
+    p.setColor(role.Window, QColor(Palette.bg))
+    p.setColor(role.WindowText, QColor(Palette.text))
+    p.setColor(role.Base, QColor(Palette.surface))
+    p.setColor(role.AlternateBase, QColor(Palette.row_alt))
+    p.setColor(role.Text, QColor(Palette.text))
+    p.setColor(role.Button, QColor(Palette.surface))
+    p.setColor(role.ButtonText, QColor(Palette.text))
+    p.setColor(role.BrightText, QColor("#ffffff"))
+    p.setColor(role.Highlight, QColor(Palette.primary))
+    p.setColor(role.HighlightedText, QColor(Palette.on_primary))
+    p.setColor(role.ToolTipBase, QColor(Palette.tooltip_bg))
+    p.setColor(role.ToolTipText, QColor(Palette.text))
+    p.setColor(role.PlaceholderText, QColor(Palette.text_faint))
+    p.setColor(role.Link, QColor(Palette.primary))
+    # 禁用态: 弱化但仍可辨识
+    for r in (role.WindowText, role.Text, role.ButtonText):
+        p.setColor(QPalette.ColorGroup.Disabled, r, QColor(Palette.text_faint))
+    return p
+
+
+def apply_theme(app) -> None:
+    """应用全局主题与默认字体(支持运行中重新调用以实现实时换肤)。"""
     font = QFont()
     font.setFamilies(["Segoe UI", "Microsoft YaHei UI", "SimHei", "PingFang SC"])
     font.setPointSizeF(9.5)
     app.setFont(font)
     app.setStyleSheet(build_qss())
-
-    # QSS 无 ::placeholder 伪元素, 占位符颜色经 QPalette 设置
-    palette = app.palette()
-    palette.setColor(QPalette.ColorRole.PlaceholderText, QColor(Palette.text_faint))
-    app.setPalette(palette)
+    app.setPalette(build_palette())

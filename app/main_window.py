@@ -18,8 +18,8 @@ import os
 from PySide6.QtCore import Qt
 from PySide6.QtGui import QColor, QFont, QPainter, QPen
 from PySide6.QtWidgets import (
-    QHBoxLayout, QLabel, QMainWindow, QMessageBox, QStackedWidget,
-    QToolButton, QVBoxLayout, QWidget,
+    QApplication, QHBoxLayout, QLabel, QMainWindow, QMessageBox,
+    QStackedWidget, QToolButton, QVBoxLayout, QWidget,
 )
 
 from . import __version__
@@ -103,8 +103,13 @@ def _draw_nav_icon(painter: QPainter, kind: str, x: int, y: int,
             painter.drawLine(x + 6, y + 6 + i * 4, x + size - 6, y + 6 + i * 4)
     elif kind == "theme":        # 主题: 半圆
         painter.drawEllipse(x + 2, y + 2, size - 4, size - 4)
-        from PySide6.QtCore import QRectF
         painter.drawLine(x + size // 2, y + 3, x + size // 2, y + size - 3)
+    elif kind == "about":        # 关于: 信息圆圈
+        painter.drawEllipse(x + 2, y + 2, size - 4, size - 4)
+        painter.drawLine(x + size // 2, y + 9, x + size // 2, y + size - 5)
+        painter.setBrush(color)
+        painter.drawEllipse(x + size // 2 - 1, y + 4, 2, 2)
+        painter.setBrush(Qt.NoBrush)
     elif kind == "demo":         # 演示: 播放三角
         from PySide6.QtCore import QPoint
         painter.drawPolygon([
@@ -177,7 +182,22 @@ class MainWindow(QMainWindow):
         self._compare_pending: tuple[str, str] | None = None
         self._compare_need: set[str] = set()
         self._stray_workers: list = []
+        self._about_dialog = None
+        self._update_text = ""
+        self._analysis_purpose = "normal"   # normal | reports
+        self._reports_pending: str | None = None
 
+        self._build_ui()
+        self._restore_settings()
+        self._goto_page(self._settings.get_int(Settings.KEY_PAGE, PAGE_INTERPRETERS))
+        self.statusBar().showMessage("就绪")
+        self.start_scan()
+        self._maybe_check_updates()
+
+    # ------------------------------------------------------------------
+    # 界面构建(拆出以便主题切换时原地重建)
+    # ------------------------------------------------------------------
+    def _build_ui(self) -> None:
         central = QWidget()
         central.setObjectName("root")
         self.setCentralWidget(central)
@@ -226,11 +246,18 @@ class MainWindow(QMainWindow):
 
         side.addStretch(1)
 
-        theme_btn = _NavItem("theme", "主题")
-        theme_btn.setToolTip("切换浅色/深色主题(需重启生效)")
-        theme_btn.clicked.connect(lambda: (theme_btn.setChecked(False),
-                                           self._toggle_theme()))
-        side.addWidget(theme_btn)
+        self._theme_btn = _NavItem("theme", "主题")
+        self._theme_btn.setToolTip(
+            f"切换到{'浅色' if Palette.is_dark else '深色'}主题(立即生效)")
+        self._theme_btn.clicked.connect(
+            lambda: (self._theme_btn.setChecked(False), self._toggle_theme()))
+        side.addWidget(self._theme_btn)
+
+        about_btn = _NavItem("about", "关于")
+        about_btn.setToolTip("软件版本与版本更新内容")
+        about_btn.clicked.connect(
+            lambda: (about_btn.setChecked(False), self.open_about()))
+        side.addWidget(about_btn)
 
         demo_btn = _NavItem("demo", "演示")
         demo_btn.setToolTip("加载内置演示数据(含冲突/缺失/循环示例)")
@@ -238,10 +265,12 @@ class MainWindow(QMainWindow):
                                           self._load_demo()))
         side.addWidget(demo_btn)
 
-        version = QLabel(f"v{__version__}")
-        version.setStyleSheet(f"color: {Palette.text_faint}; font-size: 10px;")
-        version.setAlignment(Qt.AlignHCenter)
-        side.addWidget(version)
+        self._version_label = QLabel(f"v{__version__}")
+        self._version_label.setStyleSheet(
+            f"color: {Palette.text_faint}; font-size: 10px;")
+        self._version_label.setAlignment(Qt.AlignHCenter)
+        self._version_label.setCursor(Qt.PointingHandCursor)
+        side.addWidget(self._version_label)
         layout.addWidget(sidebar)
 
         # ---- 页面栈 ----
@@ -260,7 +289,9 @@ class MainWindow(QMainWindow):
                      self.reports_page):
             self.stack.addWidget(page)
 
-        # ---- 信号 ----
+        self._wire_signals()
+
+    def _wire_signals(self) -> None:
         self.interp_page.rescan_button.clicked.connect(self.start_scan)
         self.interp_page.interpreter_activated.connect(
             self._on_interpreter_activated)
@@ -274,13 +305,10 @@ class MainWindow(QMainWindow):
         self.manage_page.packages_changed.connect(self._on_packages_changed)
         self.compare_page.compare_requested.connect(self._on_compare_requested)
         self.reports_page.diagnostics_requested.connect(self._refresh_reports)
+        self.reports_page.interpreter_selected.connect(
+            self._on_reports_interpreter)
+        self.reports_page.fix_all_requested.connect(self._on_fix_all)
         self.analysis_page.fix_requested.connect(self._on_fix_requested)
-
-        self._restore_settings()
-        self._goto_page(self._settings.get_int(Settings.KEY_PAGE, PAGE_INTERPRETERS))
-        self.statusBar().showMessage("就绪")
-        self.start_scan()
-        self._maybe_check_updates()
 
     # ------------------------------------------------------------------
     # 设置
@@ -325,12 +353,86 @@ class MainWindow(QMainWindow):
             log.warning("保存设置失败: %s", exc)
 
     def _toggle_theme(self) -> None:
-        dark = not self._settings.get_bool(Settings.KEY_DARK_THEME, False)
+        """浅色/深色实时切换: 重设调色板 + 全局 QSS, 再原地重建界面。
+
+        各页面在构造期就把 Palette 颜色写进了内联样式, 因此必须重建
+        控件树才能彻底换色; 状态(快照/解释器/conda/设置)都保存在 self,
+        重建后自动恢复, 用户无需重启。
+        """
+        running = [w for w in (
+            self._scan_worker, self._collect_worker, self._conda_worker)
+            if w is not None and w.isRunning()]
+        manage_busy = (self.manage_page._worker is not None
+                       and self.manage_page._worker.isRunning())
+        if running or manage_busy:
+            # 非阻塞提示(模态框会打断用户, 也不利于自动化测试)
+            self.statusBar().showMessage(
+                "有后台任务正在执行, 完成后再切换主题", 6000)
+            return
+        if self._analysis_worker is not None and self._analysis_worker.isRunning():
+            self._analysis_worker.wait(5000)   # 分析很快, 等它收尾即可
+
+        dark = not Palette.is_dark
         self._settings.set(Settings.KEY_DARK_THEME, dark)
-        self._settings.sync()
-        QMessageBox.information(
-            self, "主题已切换",
-            f"已切换为{'深色' if dark else '浅色'}主题, 重启应用后生效。")
+        from .ui.theme import apply_theme, use_dark
+        use_dark(dark)
+        app = QApplication.instance()
+        if app is not None:
+            apply_theme(app)
+
+        current_page = self.stack.currentIndex()
+        self.qss_rebuild(current_page)
+        self.statusBar().showMessage(
+            f"已切换到{'深色' if dark else '浅色'}主题", 4000)
+
+    def qss_rebuild(self, current_page: int) -> None:
+        """替换中央控件并按当前状态重建界面。"""
+        snapshot = self._snapshot
+        compare_a = self.compare_page.combo_a.currentData() or ""
+        compare_b = self.compare_page.combo_b.currentData() or ""
+        reports_path = self.reports_page.selected_path() or ""
+
+        old = self.centralWidget()
+        self.setCentralWidget(QWidget())   # 先摘下旧控件树
+        if old is not None:
+            old.setParent(None)
+            old.deleteLater()
+
+        self._build_ui()
+        if self._interpreters:
+            self.interp_page.show_interpreters(self._interpreters)
+            self.manage_page.set_data(self._interpreters, self._conda_info)
+            self.compare_page.set_interpreters(
+                self._interpreters, current_path=compare_a)
+            self.compare_page.set_selection(compare_a, compare_b)
+            self.reports_page.set_interpreters(
+                self._interpreters, current_path=reports_path)
+        if self._conda_info is not None:
+            self.conda_page.load_conda(self._conda_info)
+        self._goto_page(current_page)
+        if snapshot is not None:
+            self._refresh_view_from_snapshot(snapshot)
+
+    def _refresh_view_from_snapshot(self, snapshot) -> None:
+        """主题重建后: 重新分析并恢复三个页面的数据(不触发采集)。"""
+        self._snapshot = snapshot
+        if self._analysis_worker is not None:
+            self._analysis_worker.wait(1500)
+        self._analysis_worker = AnalysisWorker(snapshot, self)
+        self._analysis_worker.done.connect(self._on_analysis_done)
+        self._analysis_worker.failed.connect(self._on_analysis_failed)
+        self._analysis_worker.start()
+
+    def open_about(self) -> None:
+        """打开「关于」面板: 版本 + 运行环境 + 版本更新内容。"""
+        from .ui.about_dialog import AboutDialog
+        if self._about_dialog is None:
+            self._about_dialog = AboutDialog(self, update_text=self._update_text)
+        else:
+            self._about_dialog.set_update_text(
+                self._update_text or "尚未完成更新检查")
+        self._about_dialog.show()
+        self._about_dialog.raise_()
 
     # ------------------------------------------------------------------
     # 关闭
@@ -424,6 +526,10 @@ class MainWindow(QMainWindow):
         self.compare_page.set_selection(
             self._settings.get(Settings.KEY_COMPARE_A, "") or "",
             self._settings.get(Settings.KEY_COMPARE_B, "") or "")
+        self.reports_page.set_interpreters(
+            self._interpreters,
+            current_path=self._snapshot.interpreter.path if self._snapshot
+            else (self._settings.get(Settings.KEY_LAST_PYTHON, "") or ""))
         n = len(report.interpreters)
         self.statusBar().showMessage(f"扫描完成: 发现 {n} 个 Python 解释器")
         self.start_conda_scan()
@@ -530,6 +636,16 @@ class MainWindow(QMainWindow):
         if self._compare_pending:
             self._try_compare()
             return
+        # 诊断页选定环境触发的采集: 只刷新报告, 不切页
+        if self._reports_pending and os.path.normcase(
+                snapshot.interpreter.path) == os.path.normcase(
+                self._reports_pending):
+            self._reports_pending = None
+            self._snapshot = snapshot
+            self.statusBar().showMessage(
+                f"正在诊断 {snapshot.interpreter.path} …")
+            self._apply_snapshot(snapshot, purpose="reports")
+            return
         self._apply_snapshot(snapshot)
 
     def _on_collect_failed(self, message: str) -> None:
@@ -550,8 +666,10 @@ class MainWindow(QMainWindow):
     # ------------------------------------------------------------------
     # 分析(后台)
     # ------------------------------------------------------------------
-    def _apply_snapshot(self, snapshot: EnvironmentSnapshot) -> None:
+    def _apply_snapshot(self, snapshot: EnvironmentSnapshot,
+                        purpose: str = "normal") -> None:
         self._snapshot = snapshot
+        self._analysis_purpose = purpose
         interp = snapshot.interpreter
         self.manage_page.set_current_env_dir(self._env_dir_of(interp.path))
         self.statusBar().showMessage(
@@ -587,6 +705,12 @@ class MainWindow(QMainWindow):
             f"环境: Python {interp.version} · {interp.path} · "
             f"{stats['packages']} 个包 · 冲突 {stats['conflicts']} · "
             f"缺失 {stats['missing']}")
+        if self._analysis_purpose == "reports":
+            # 从诊断页发起: 停留原页面, 仅刷新报告
+            self._analysis_purpose = "normal"
+            self._goto_page(PAGE_REPORTS)
+            return
+        self._analysis_purpose = "normal"
         if self.stack.currentIndex() == PAGE_INTERPRETERS:
             self._goto_page(PAGE_PACKAGES)
 
@@ -601,15 +725,53 @@ class MainWindow(QMainWindow):
             result = self._current_result()
         snapshot = self._snapshot
         reports = self.reports_page
+        reports.set_interpreters(self._interpreters,
+                                 current_path=snapshot.interpreter.path)
         reports.set_snapshot(snapshot)
         diag = diag_mod.run_diagnostics(snapshot, result, self._interpreters)
-        reports.show_diagnostics(diag)
+        reports.show_diagnostics(diag, result)
         reports.show_licenses(licenses.aggregate(snapshot))
         try:
             history = cache.load_history(snapshot.interpreter.path)
         except OSError:
             history = []
         reports.set_history(history)
+
+    # -- 诊断页: 选定解释器 / 一键修复 ------------------------------------
+    def _on_reports_interpreter(self, path: str) -> None:
+        """诊断页切换目标解释器 → 加载(必要时采集)并诊断该环境。"""
+        if not path:
+            return
+        snapshot = self._snapshots.get(path) or cache.load_snapshot(path)
+        if snapshot is not None:
+            self._snapshots[path] = snapshot
+            if self._snapshot is not None and os.path.normcase(
+                    self._snapshot.interpreter.path) == os.path.normcase(path):
+                # 已是当前环境: 直接刷报告, 不重复分析
+                self._refresh_reports()
+                return
+            self._apply_snapshot(snapshot, purpose="reports")
+            return
+        if self._collect_worker is not None and self._collect_worker.isRunning():
+            self.statusBar().showMessage("正在采集其它环境, 请稍候…")
+            return
+        info = next((i for i in self._interpreters
+                     if os.path.normcase(i.path) == os.path.normcase(path)),
+                    None)
+        if info is None:
+            info = InterpreterInfo(path=path, source="path")
+        self._reports_pending = path
+        self.reports_page._subtitle.setText(f"正在采集 {path} …")
+        self._collect(info, force=False)
+
+    def _on_fix_all(self, python_path: str, expressions: list) -> None:
+        """一键修复: 交给管理页批量执行(复用其日志与进度反馈)。"""
+        if not expressions:
+            return
+        self._goto_page(PAGE_MANAGE)
+        self.manage_page.run_pip_install_batch(python_path, expressions)
+        # 修复完成后需要刷新诊断页: 包变更会经 packages_changed 回流
+        self._reports_pending = python_path
 
     def _current_result(self):
         """当前分析结果(从分析页取, 避免重复分析)。"""
@@ -691,9 +853,22 @@ class MainWindow(QMainWindow):
                     snap.interpreter.path) == target:
                 del self._snapshots[key]
         cache.invalidate(python_path)
-        if self._snapshot and self._snapshot.interpreter.path and \
-                os.path.normcase(self._snapshot.interpreter.path) == target:
+
+        current = self._snapshot.interpreter.path if self._snapshot else ""
+        reports_target = self.reports_page.selected_path()
+
+        if current and os.path.normcase(current) == target:
             self._collect(self._snapshot.interpreter, force=True)
+            return
+        # 修复的不是"当前浏览环境", 但可能是诊断页选中的环境:
+        # 采集后只刷新报告(_reports_pending 机制)
+        if reports_target and os.path.normcase(reports_target) == target:
+            info = next((i for i in self._interpreters
+                         if os.path.normcase(i.path) == target), None)
+            if info is None:
+                info = InterpreterInfo(path=python_path, source="path")
+            self._reports_pending = python_path
+            self._collect(info, force=True)
 
     def _on_package_activated(self, key: str) -> None:
         self._goto_page(PAGE_ANALYSIS)
@@ -717,12 +892,19 @@ class MainWindow(QMainWindow):
         worker.deleteLater()
         if result.error:
             log.info("更新检查未完成: %s", result.error)
-            return
-        if result.has_update:
+            self._update_text = "更新检查未完成(网络不可用, 不影响使用)"
+        elif result.has_update:
+            self._update_text = (
+                f"发现新版本 {result.latest}(当前 v{__version__})。\n"
+                f"下载: {result.url}")
             self.statusBar().showMessage(
                 f"发现新版本 {result.latest}(当前 v{__version__}) · {result.url}",
                 20000)
             log.info("发现新版本: %s", result.latest)
+        else:
+            self._update_text = f"已是最新版本 v{__version__}"
+        if self._about_dialog is not None:
+            self._about_dialog.set_update_text(self._update_text)
 
     # ------------------------------------------------------------------
     # 演示数据

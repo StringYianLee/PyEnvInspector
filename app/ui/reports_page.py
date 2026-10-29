@@ -75,9 +75,11 @@ class _IssueCard(QFrame):
 
 
 class ReportsPage(QWidget):
-    """诊断与报告页。"""
+    """诊断与报告页(支持指定解释器诊断 + 一键修复全部冲突)。"""
 
     diagnostics_requested = Signal()
+    interpreter_selected = Signal(str)        # 目标解释器路径
+    fix_all_requested = Signal(str, list)     # (解释器路径, pip 表达式列表)
 
     def __init__(self, parent=None):
         super().__init__(parent)
@@ -85,6 +87,8 @@ class ReportsPage(QWidget):
         self._snapshot: EnvironmentSnapshot | None = None
         self._report: DiagnosticReport | None = None
         self._history: list[dict] = []
+        self._analysis = None
+        self._fix_expressions: list[str] = []
 
         root = QVBoxLayout(self)
         root.setContentsMargins(28, 24, 28, 16)
@@ -104,6 +108,24 @@ class ReportsPage(QWidget):
         head.addWidget(self.refresh_btn)
         root.addLayout(head)
 
+        # 目标环境选择 + 一键修复
+        target_row = QHBoxLayout()
+        target_row.setSpacing(8)
+        target_row.addWidget(QLabel("目标解释器:"))
+        self.interp_combo = QComboBox()
+        self.interp_combo.setMinimumWidth(360)
+        self.interp_combo.currentIndexChanged.connect(self._on_interp_changed)
+        target_row.addWidget(self.interp_combo, 1)
+        self.diagnose_btn = QPushButton("诊断")
+        self.diagnose_btn.clicked.connect(self._emit_selected)
+        target_row.addWidget(self.diagnose_btn)
+        self.fix_all_btn = QPushButton("一键修复全部冲突")
+        self.fix_all_btn.setProperty("variant", "primary")
+        self.fix_all_btn.setEnabled(False)
+        self.fix_all_btn.clicked.connect(self._request_fix_all)
+        target_row.addWidget(self.fix_all_btn)
+        root.addLayout(target_row)
+
         self._subtitle = ElidedLabel("在「解释器」页选择一个环境后, 这里会显示体检结果")
         self._subtitle.setStyleSheet(
             f"color: {Palette.text_muted}; font-size: 12px;")
@@ -114,6 +136,63 @@ class ReportsPage(QWidget):
         self._build_diag_tab()
         self._build_license_tab()
         self._build_history_tab()
+
+    # ------------------------------------------------------------------
+    # 目标环境选择 / 一键修复
+    # ------------------------------------------------------------------
+    def set_interpreters(self, interpreters, current_path: str = "") -> None:
+        """填充目标解释器下拉(保留当前选择)。"""
+        previous = current_path or self.interp_combo.currentData()
+        self.interp_combo.blockSignals(True)
+        self.interp_combo.clear()
+        for info in interpreters:
+            label = f"Python {info.version} · {info.source_label}"
+            if info.env_name:
+                label += f" · {info.env_name}"
+            label += f" · {info.path}"
+            self.interp_combo.addItem(label, info.path)
+        self.interp_combo.blockSignals(False)
+        if previous:
+            idx = self.interp_combo.findData(previous)
+            if idx >= 0:
+                self.interp_combo.setCurrentIndex(idx)
+
+    def selected_path(self) -> str:
+        return self.interp_combo.currentData() or ""
+
+    def _on_interp_changed(self, _index: int) -> None:
+        self.fix_all_btn.setEnabled(False)
+        self._fix_expressions = []
+        self._emit_selected()
+
+    def _emit_selected(self) -> None:
+        path = self.selected_path()
+        if path:
+            self.interpreter_selected.emit(path)
+
+    def _request_fix_all(self) -> None:
+        path = self.selected_path()
+        if not path or not self._fix_expressions:
+            return
+        box = QMessageBox(self)
+        box.setIcon(QMessageBox.Icon.Question)
+        box.setWindowTitle("确认一键修复")
+        box.setText(
+            f"将在目标环境执行 {len(self._fix_expressions)} 条 pip 安装命令:")
+        box.setInformativeText("\n".join(self._fix_expressions))
+        box.setDetailedText(
+            f"目标解释器: {path}\n\n"
+            "修复逻辑: 对每个被多个包约束的依赖, 合并全部版本约束后重装, "
+            "由 pip 求解出一个同时满足所有约束的版本。\n\n"
+            "注意:\n  · 会改变该环境中的包版本\n"
+            "  · 若约束之间没有交集, pip 会报错且不改变现有安装\n"
+            "  · 单个包失败不会中断其余包的修复")
+        box.setStandardButtons(QMessageBox.StandardButton.Ok |
+                               QMessageBox.StandardButton.Cancel)
+        box.setDefaultButton(QMessageBox.StandardButton.Cancel)
+        if box.exec() != QMessageBox.StandardButton.Ok:
+            return
+        self.fix_all_requested.emit(path, list(self._fix_expressions))
 
     # ------------------------------------------------------------------
     def _build_diag_tab(self) -> None:
@@ -215,8 +294,10 @@ class ReportsPage(QWidget):
             f"{snapshot.python_full_version or interp.version} · "
             f"{len(snapshot.packages)} 个包")
 
-    def show_diagnostics(self, report: DiagnosticReport) -> None:
+    def show_diagnostics(self, report: DiagnosticReport,
+                         analysis=None) -> None:
         self._report = report
+        self._analysis = analysis
         while self._issues_layout.count() > 1:
             item = self._issues_layout.takeAt(0)
             widget = item.widget()
@@ -230,6 +311,23 @@ class ReportsPage(QWidget):
         others = len(report.issues) - report.errors - report.warnings
         self.diag_summary.setText(
             f"严重 {report.errors} · 警告 {report.warnings} · 提示 {others}")
+
+        # 计算一键修复计划: 每个冲突目标包的合并约束 → pip 表达式
+        self._fix_expressions = []
+        if analysis is not None:
+            from ..core.analyzer import suggest_constraint
+            targets: list[str] = []
+            for edge in analysis.conflict_edges:
+                if edge.target_key not in targets:
+                    targets.append(edge.target_key)
+            for key in targets:
+                expression, _sources = suggest_constraint(analysis, key)
+                if expression and expression not in self._fix_expressions:
+                    self._fix_expressions.append(expression)
+        self.fix_all_btn.setEnabled(bool(self._fix_expressions))
+        self.fix_all_btn.setText(
+            f"一键修复全部冲突 ({len(self._fix_expressions)})"
+            if self._fix_expressions else "一键修复全部冲突")
 
     def show_licenses(self, groups: list[dict]) -> None:
         self.license_table.setRowCount(len(groups))

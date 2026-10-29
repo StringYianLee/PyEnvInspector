@@ -85,7 +85,8 @@ class ManagePage(QWidget):
         self._log.setReadOnly(True)
         self._log.setMaximumHeight(170)
         self._log.setStyleSheet(
-            "QPlainTextEdit { background: #f8f9fc; border: none;"
+            f"QPlainTextEdit {{ background: {Palette.surface_alt};"
+            f" color: {Palette.text}; border: none;"
             " font-family: Consolas, monospace; font-size: 11px; }")
         log_layout.addWidget(self._log)
         root.addWidget(log_frame)
@@ -649,12 +650,26 @@ class ManagePage(QWidget):
     def run_pip_install(self, python_exe: str, spec: str,
                         index_label: str = "官方") -> None:
         """供其它页面调用: 在指定环境执行 pip install(显示在操作日志)。"""
-        self.tabs.setCurrentIndex(3)   # 包管理 Tab
+        self.tabs.setCurrentIndex(4)   # 包管理 Tab
         self._start_op(f"pip 安装 {spec}", em.pip_install,
                        python_exe, spec, index_label,
                        after=f"packages:{python_exe}",
                        message=f"pip 安装已完成: {spec}",
                        result_text=f"目标: {python_exe}\n包: {spec}")
+
+    def run_pip_install_batch(self, python_exe: str, specs: list,
+                              index_label: str = "官方") -> None:
+        """供诊断页调用: 批量修复多个冲突(逐个安装并汇总结果)。"""
+        if not specs:
+            return
+        self.tabs.setCurrentIndex(4)
+        self._start_op(
+            f"一键修复 {len(specs)} 个冲突", em.pip_install_batch,
+            python_exe, list(specs), index_label,
+            after=f"packages:{python_exe}",
+            message=f"已完成 {len(specs)} 项修复, "
+                    "可回到「诊断」页确认冲突是否消除。",
+            result_text="\n".join(specs))
 
     # ------------------------------------------------------------------
     # 具体操作

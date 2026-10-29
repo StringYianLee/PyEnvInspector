@@ -803,6 +803,38 @@ def pip_install(python_exe: str, spec: str, index_label: str = "官方",
         on_output(f"✔ 安装成功: {spec}")
 
 
+def pip_install_batch(python_exe: str, specs: list[str],
+                      index_label: str = "官方", on_output=None) -> dict:
+    """按顺序批量执行 pip 安装(一键修复多个冲突)。
+
+    单个包失败不中断后续(尽量修好能修的), 结束时汇总:
+    · 全部成功 → 返回 {"ok": n, "failed": 0}
+    · 有失败   → 抛 EnvManagerError, 消息列出失败项与原因
+    """
+    if on_output is None:
+        on_output = lambda msg: None
+    specs = [s.strip() for s in specs if s and s.strip()]
+    if not specs:
+        raise EnvManagerError("没有需要修复的冲突")
+
+    failures: list[tuple[str, str]] = []
+    for i, spec in enumerate(specs, 1):
+        on_output(f"=== [{i}/{len(specs)}] {spec} ===")
+        try:
+            pip_install(python_exe, spec, index_label, on_output=on_output)
+        except EnvManagerError as exc:
+            failures.append((spec, str(exc)))
+            on_output(f"✘ 失败: {spec}")
+    if failures:
+        detail = "\n".join(f"  · {spec}\n    {msg.splitlines()[0]}"
+                           for spec, msg in failures)
+        raise EnvManagerError(
+            f"{len(specs) - len(failures)} 个成功, {len(failures)} 个失败:\n"
+            f"{detail}\n\n常见原因: 约束无交集(pip 无解)、网络失败或权限不足。")
+    on_output(f"✔ 全部 {len(specs)} 项修复完成")
+    return {"ok": len(specs), "failed": 0}
+
+
 def pip_uninstall(python_exe: str, package: str, on_output=None) -> None:
     if not package.strip():
         raise EnvManagerError("请输入要卸载的包名")

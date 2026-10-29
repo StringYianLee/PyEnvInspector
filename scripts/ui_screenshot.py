@@ -158,6 +158,24 @@ def main() -> int:
     if grab_to("shot_16_history.png"):
         return 1
 
+    # 11) 深色主题 + 关于面板(实时切换, 无需重启)
+    win._toggle_theme()
+    settle(900)
+    win._goto_page(6)
+    settle(400)
+    if grab_to("shot_18_reports_dark.png"):
+        return 1
+    win.open_about()
+    settle(600)
+    if win._about_dialog is not None:
+        path = os.path.join(OUT_DIR, "shot_19_about.png")
+        if not win._about_dialog.grab().save(path):
+            print(f"SCREENSHOT_FAILED: {path}", file=sys.stderr)
+            return 1
+        win._about_dialog.close()
+    win._toggle_theme()   # 切回浅色, 保持后续截图风格一致
+    settle(600)
+
     print("SCREENSHOTS_OK:", OUT_DIR)
     return 0
 
