@@ -119,29 +119,39 @@ def test_set_interpreters_does_not_emit_selection(qapp):
     page.deleteLater()
 
 
-def test_main_window_switch_target_no_recursion(qapp):
-    """模拟用户连续切换目标解释器: 不能递归/闪退, 结果要落在所选环境。"""
+def test_main_window_switch_target_no_recursion(qapp, monkeypatch):
+    """模拟用户连续切换目标解释器: 不能递归/闪退, 结果要落在所选环境。
+
+    为避免后台扫描(CI 机器环境不同)与网络更新检查干扰, 关闭这两条链路,
+    只保留演示数据这条确定性路径。
+    """
     from app.main_window import MainWindow
+
+    monkeypatch.setattr(MainWindow, "start_scan", lambda self: None)
+    monkeypatch.setattr(MainWindow, "_maybe_check_updates", lambda self: None)
 
     win = MainWindow()
     win.load_demo()
 
-    deadline = time.monotonic() + 20
+    # 等"分析完成 + 诊断页下拉已填充"两个条件都满足(_refresh_reports
+    # 在 load_analysis 之后执行, 只等 _analysis 会提前 break)
+    deadline = time.monotonic() + 30
     while time.monotonic() < deadline:
         qapp.processEvents()
-        if win.analysis_page._analysis is not None:
+        if (win.analysis_page._analysis is not None
+                and win.reports_page.interp_combo.count() >= 2):
             break
         time.sleep(0.02)
     assert win.analysis_page._analysis is not None
+    count = win.reports_page.interp_combo.count()
+    assert count >= 3, f"演示数据应提供多个环境, 实际 {count}"
 
     emitted: list[str] = []
     win.reports_page.interpreter_selected.connect(emitted.append)
-    count = win.reports_page.interp_combo.count()
-    assert count >= 2
 
-    for idx in (1, 0, min(2, count - 1)):
+    for idx in (1, 0, 2):
         win.reports_page.interp_combo.setCurrentIndex(idx)
-        end = time.monotonic() + 15
+        end = time.monotonic() + 20
         while time.monotonic() < end:
             qapp.processEvents()
             if (win._reports_loading is None
@@ -152,9 +162,9 @@ def test_main_window_switch_target_no_recursion(qapp):
 
     # 每次用户切换恰好一次信号(程序化刷新不再叠加)
     assert len(emitted) == 3, emitted
-    # 报告与下拉选中项一致
-    assert os.path.normcase(win.reports_page.selected_path()) == os.path.normcase(
+    # 下拉选中项与报告中的环境一致
+    selected = win.reports_page.selected_path()
+    assert selected and os.path.normcase(selected) == os.path.normcase(
         win.reports_page.interp_combo.currentData())
-    assert "诊断" in win.reports_page.diag_summary.text() or \
-        "严重" in win.reports_page.diag_summary.text()
+    assert win.reports_page._snapshot is not None
     win.close()

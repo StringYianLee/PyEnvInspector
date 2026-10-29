@@ -19,8 +19,8 @@ from app.demo import build_demo_snapshot  # noqa: E402
 # ---------------------------------------------------------------------------
 
 def test_version_matches_changelog_head():
+    """程序版本必须与变更日志首条一致(发版时同步更新, 避免"关于"页错位)。"""
     assert __version__ == changelog.latest_version()
-    assert changelog.latest_version() == "1.3.0"
 
 
 def test_changelog_text_for_version():
