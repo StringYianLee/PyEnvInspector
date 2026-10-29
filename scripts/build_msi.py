@@ -19,6 +19,14 @@ import shutil
 import subprocess
 import sys
 
+# CI/无中文控制台(如 GitHub runner 的 cp1252)下打印中文会抛
+# UnicodeEncodeError 导致构建"假失败"——强制 UTF-8 且不可编码时替换
+for _stream in (sys.stdout, sys.stderr):
+    try:
+        _stream.reconfigure(encoding="utf-8", errors="replace")
+    except (AttributeError, ValueError):
+        pass
+
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 WIX_BIN = os.path.join(ROOT, "tools", "wix314")
 APP_DIR = os.path.join(ROOT, "dist", "PyEnvInspector")
