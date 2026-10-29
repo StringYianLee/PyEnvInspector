@@ -102,16 +102,21 @@ jobs:
           name: msi
           path: build/*.msi
 
-      - name: 读取发布说明(可选)
-        id: notes
+      - name: 生成发布说明文件
         shell: pwsh
         run: |
-          $file = "docs/release_notes_${{ github.ref_name }}.md"
-          if (Test-Path $file) {
-            Write-Host "使用发布说明: $file"
-            "notes_file=$file" >> $env:GITHUB_OUTPUT
+          # 保证 body_path 始终有文件: 优先用仓库内的版本化说明
+          $src = "docs/release_notes_${{ github.ref_name }}.md"
+          New-Item -ItemType Directory -Force -Path build | Out-Null
+          if (Test-Path $src) {
+            Copy-Item $src "build/release_notes.md" -Force
+            Write-Host "使用 $src ($((Get-Content $src).Count) 行)"
           } else {
-            Write-Host "未找到 $file, 使用自动生成的更新说明"
+            Set-Content -Path "build/release_notes.md" -Encoding utf8 -Value @"
+          本次发布详情请查看仓库提交记录。
+          安装: 下载下方 PyEnvInspector MSI 双击安装。
+          "@
+            Write-Host "未找到 $src, 使用占位说明"
           }
 
       - name: 创建/更新 GitHub Release 并上传 MSI
@@ -119,8 +124,7 @@ jobs:
         with:
           name: ${{ github.ref_name }}
           tag_name: ${{ github.ref_name }}
-          generate_release_notes: true
-          body_path: ${{ steps.notes.outputs.notes_file }}
+          body_path: build/release_notes.md
           files: build/*.msi
           draft: false
           prerelease: false
