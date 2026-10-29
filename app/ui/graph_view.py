@@ -967,6 +967,20 @@ class DependencyGraphView(QGraphicsView):
         scale = min(max(scale, 0.08), 1.5)
         self._animate_viewport(scale, rect.center(), VIEWPORT_MOVE_MS)
 
+    def render_to_image(self, width: int, height: int):
+        """把整张场景渲染为 QImage(导出 PNG 用, 与视口缩放无关)。"""
+        from PySide6.QtGui import QImage
+        scene_rect = self.sceneRect()
+        image = QImage(width, height, QImage.Format.Format_ARGB32_Premultiplied)
+        image.fill(QColor(Palette.graph_bg))
+        painter = QPainter(image)
+        painter.setRenderHints(QPainter.Antialiasing |
+                               QPainter.TextAntialiasing)
+        if not scene_rect.isEmpty():
+            self.scene().render(painter, QRectF(0, 0, width, height), scene_rect)
+        painter.end()
+        return image
+
     def center_on_node(self, key: str) -> None:
         node = self.controller.nodes.get(key)
         if node is not None:

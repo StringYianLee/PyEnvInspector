@@ -16,7 +16,13 @@
 | 🕸 依赖图可视化 | 分层布局与力导向布局双引擎, 冲突边红色高亮, 点击冲突清单自动聚焦冲突链条 |
 | 📊 冲突矩阵 | 行 = 依赖方, 列 = 被依赖方, 交叉格直观呈现依赖约束的满足状态 |
 | 🐍 Conda 专属视图 | 扫描 conda 环境列表 / 原生包(conda-meta) / 环境路径 / .condarc 配置; 双击环境直接接入 pip 分析流水线 |
-| 🛠 环境管理 | 安装/删除 Python 解释器(3.9-3.13, sha256 校验+多镜像下载); 创建/删除 conda 环境; 指定解释器 pip 装/卸包; 指定 conda 环境 conda 装/卸包; 实时操作日志 + 二次确认 + 进程占用保护 |
+| 🛠 环境管理 | 安装/删除 Python 解释器(3.9-3.13, sha256 校验+多镜像下载, 可自定义安装路径/加入用户 Path); 创建/删除 conda 环境与 venv; 指定环境 pip / conda 装/卸包 |
+| 🔀 环境对比 | 任选两个环境对比包版本差异(仅 A / 仅 B / 升级 / 降级 / 无法比较), 支持 CSV 导出 |
+| 🩺 诊断与报告 | 环境体检(PATH 遮蔽/非法版本/依赖问题/循环/许可证缺失)、许可证聚合(宽松/弱著佐权/强著佐权/未声明)、采集历史变化 |
+| 📤 多格式导出 | 分析报告 / requirements.txt / environment.yml / 依赖图 PNG·SVG·Graphviz DOT / 许可证汇总 / 对比 CSV |
+| ⚡ 性能与持久化 | 依赖分析后台线程执行; 环境快照磁盘缓存(12h TTL, 跨重启复用); 采集可取消; 冲突一键生成修复命令 |
+| 🖥 命令行模式 | `--cli` 提供 envs/packages/analyze/export/compare/diagnostics/licenses, 输出 JSON 可进 CI |
+| 🌙 深色主题 | 侧边栏「主题」切换(重启生效), 设置自动持久化 |
 | 📤 报告导出 | 一键导出文本版依赖分析报告 |
 | 🎬 演示模式 | 内置演示数据(含冲突 / 缺失 / 循环示例), 无 Python 环境也能查看效果 |
 
@@ -41,12 +47,33 @@ python main.py --demo               # 直接加载演示数据
 
 > 运行本工具自身的 Python 需要 **3.9+**; 被分析的目标环境需要 **3.8+**。
 
+### 命令行模式（无 GUI，可进 CI）
+
+```bash
+python main.py --cli envs                                  # 列出解释器
+python main.py --cli packages --python <python.exe>        # 列出包
+python main.py --cli analyze  --python <python.exe>         # 依赖分析
+python main.py --cli analyze  --python <python.exe> --json --fail-on-conflict
+python main.py --cli compare  --a <pythonA> --b <pythonB>   # 环境对比
+python main.py --cli diagnostics --python <python.exe>      # 环境体检
+python main.py --cli licenses    --python <python.exe>      # 许可证汇总
+python main.py --cli export --python <python.exe> --format requirements --out req.txt
+#   --format: requirements | yaml | report | dot | licenses
+```
+
+`--fail-on-conflict` 在检出冲突/缺失时返回退出码 **2**，可直接用于流水线卡点；
+`--json` 输出机器可读结构。首次采集会写入缓存（`%LOCALAPPDATA%\PyEnvInspector\cache`），
+后续命令秒开；`--no-cache` 强制重新采集。
+
 ### 运行测试
 
 ```bash
 pip install -r requirements-dev.txt
 pytest tests/ -v
 ```
+
+> 已配置 GitHub Actions（`.github/workflows/ci.yml`）：push/PR 自动跑测试；
+> 推 `v*` 标签时自动构建 MSI 并创建 Release（无需手工上传）。
 
 ### 封装为 MSI 安装包
 
@@ -187,36 +214,49 @@ python scripts\build_msi.py          :: 生成 build\PyEnvInspector-1.0.0.msi
 
 ```
 pyenv-inspector/
-├── main.py                     # 入口 (支持 --demo)
+├── main.py                     # 入口 (GUI / --demo / --cli)
 ├── requirements.txt            # 运行依赖: PySide6, packaging
+├── LICENSE                     # MIT
+├── pyproject.toml              # 项目元数据 + pytest/ruff 配置
+├── .github/workflows/ci.yml    # CI: 测试 + tag 触发构建 MSI 并发布 Release
 ├── install.bat / run.bat       # Windows 一键安装/启动
 ├── app/
-│   ├── core/                   # ── 数据与算法层(可独立复用, 无 UI 依赖) ──
+│   ├── core/                   # ── 数据与算法层(零 UI 依赖, 可独立复用) ──
 │   │   ├── models.py           #   数据模型(解释器/包/边/分析结果/conda)
-│   │   ├── scanner.py          #   解释器扫描(6 大渠道 + 实探验证)
+│   │   ├── scanner.py          #   解释器扫描(7 大渠道 + 实探验证)
 │   │   ├── conda_scanner.py    #   conda 专属扫描(环境/包/路径/.condarc)
-│   │   ├── env_manager.py      #   环境管理(装/删解释器、建/删环境、包装卸)
-│   │   ├── collector.py        #   目标环境包元数据采集(子进程)
-│   │   ├── analyzer.py         #   PEP 508 解析 + 冲突判定
+│   │   ├── env_manager.py      #   装/删解释器、建/删 conda 环境与 venv、包装卸、Path 集成
+│   │   ├── collector.py        #   包元数据采集(子进程 + 临时文件协议 + 可取消)
+│   │   ├── analyzer.py         #   PEP 508 解析 + 冲突判定 + 修复建议
 │   │   ├── scc.py              #   Tarjan 强连通分量(循环依赖)
-│   │   └── layout.py           #   分层/力导向布局引擎
+│   │   ├── layout.py           #   分层/力导向布局引擎
+│   │   ├── cache.py            #   快照磁盘缓存 + 采集历史
+│   │   ├── compare.py          #   环境差异 / 历史差异
+│   │   ├── exporter.py         #   requirements / environment.yml / 报告 / DOT / JSON
+│   │   ├── diagnostics.py      #   环境体检(PATH 遮蔽/版本/依赖)
+│   │   ├── licenses.py         #   许可证归一化与聚合
+│   │   ├── updater.py          #   Release 更新检查(失败静默)
+│   │   └── appsettings.py      #   日志 + QSettings 设置
+│   ├── cli.py                  # 命令行接口(无 Qt)
 │   ├── ui/                     # ── 界面层 ──
-│   │   ├── theme.py            #   现代浅色主题(QSS 色板)
+│   │   ├── theme.py            #   浅色/深色双主题(QSS 色板)
 │   │   ├── widgets.py          #   FlowLayout/徽章/统计卡/忙碌遮罩
-│   │   ├── interpreters_page.py#   页面一: 解释器卡片选择
-│   │   ├── packages_page.py    #   页面二: 包表格 + 详情面板
-│   │   ├── analysis_page.py    #   页面三: 图/清单/循环/矩阵 + 导出
-│   │   ├── conda_page.py       #   页面四: Conda 环境/包/配置
-│   │   ├── manage_page.py      #   页面五: 环境管理(安装/删除/包操作)
-│   │   ├── graph_view.py       #   依赖图(QGraphicsView 节点/边)
+│   │   ├── interpreters_page.py#   页1: 解释器卡片选择
+│   │   ├── packages_page.py    #   页2: 包表格 + 详情面板
+│   │   ├── analysis_page.py    #   页3: 图/清单/循环/矩阵 + 多格式导出 + 冲突修复
+│   │   ├── conda_page.py       #   页4: Conda 环境/包/配置
+│   │   ├── manage_page.py      #   页5: 环境管理(解释器/venv/conda/包)
+│   │   ├── compare_page.py     #   页6: 环境对比
+│   │   ├── reports_page.py     #   页7: 诊断 / 许可证 / 历史变化
+│   │   ├── graph_view.py       #   依赖图(QGraphicsView 节点/边/动效)
 │   │   └── main_window.py      #   主窗口与流程编排
-│   ├── workers.py              # QThread 后台任务(扫描/采集/布局/conda/管理)
+│   ├── workers.py              # QThread 后台任务(扫描/采集/分析/布局/更新检查)
 │   └── demo.py                 # 演示数据
-├── tests/                      # pytest 单元 + 集成测试(57 个)
+├── tests/                      # pytest 单元 + 集成测试(96 个)
 └── scripts/ui_screenshot.py    # 离屏渲染截图验证
 ```
 
-**架构原则**: `core` 层零 UI 依赖, 可被任何脚本/服务直接复用; 所有子进程调用(扫描探测、包采集)均在 `QThread` 后台执行, UI 永不阻塞; 同一解释器的包数据会话内缓存, 「重新加载」强制重采。
+**架构原则**: `core` 层零 UI 依赖, 可被 CLI/脚本/服务直接复用; 扫描、采集、依赖分析、布局、更新检查全部在 `QThread` 后台执行, UI 永不阻塞; 采集结果落盘缓存(12h TTL)并保留历史, 「重新加载」强制重采并更新历史。所有网络访问(下载/更新检查)失败都会优雅降级。
 
 ---
 

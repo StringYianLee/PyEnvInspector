@@ -79,6 +79,7 @@ class InstalledPackage:
     name: str                                       # 元数据中的原始名称
     version: str = ""                               # 已安装版本号
     requires: list[str] = field(default_factory=list)  # Requires-Dist 原始行(PEP 508)
+    license_text: str = ""                          # License 元数据/分类器(许可证聚合用)
 
 
 @dataclass

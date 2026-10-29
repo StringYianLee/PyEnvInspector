@@ -5,13 +5,15 @@ from __future__ import annotations
 import datetime
 
 from PySide6.QtCore import Qt, Signal
-from PySide6.QtGui import QColor, QFont
+from PySide6.QtGui import QColor, QFont, QPainter
 from PySide6.QtWidgets import (
-    QComboBox, QFrame, QHBoxLayout, QHeaderView, QLabel, QLineEdit,
-    QPushButton, QScrollArea, QTableWidget, QTableWidgetItem, QTabWidget,
-    QVBoxLayout, QWidget,
+    QComboBox, QFileDialog, QFrame, QHBoxLayout, QHeaderView, QLabel,
+    QLineEdit, QMenu, QMessageBox, QPushButton, QScrollArea, QTableWidget,
+    QTableWidgetItem, QTabWidget, QToolButton, QVBoxLayout, QWidget,
 )
 
+from ..core import exporter, licenses
+from ..core.analyzer import suggest_constraint
 from ..core.layout import force_layout, hierarchical_layout
 from ..core.models import AnalysisResult, DepEdge, EdgeStatus
 from .graph_view import DependencyGraphView
@@ -22,10 +24,13 @@ from .widgets import BusyOverlay, FlowLayout, make_badge
 class AnalysisPage(QWidget):
     """依赖分析页。"""
 
+    fix_requested = Signal(str, str)   # (目标解释器路径, pip 安装表达式)
+
     def __init__(self, parent=None):
         super().__init__(parent)
         self.setObjectName("root")
         self._analysis: AnalysisResult | None = None
+        self._selected_problem: DepEdge | None = None
 
         root = QVBoxLayout(self)
         root.setContentsMargins(28, 24, 28, 20)
@@ -58,13 +63,31 @@ class AnalysisPage(QWidget):
         # Tab 4: 冲突矩阵
         self._build_matrix_tab()
 
-        # 导出报告
+        # 导出(多格式菜单)
         export_row = QHBoxLayout()
         export_row.addStretch(1)
-        self.export_button = QPushButton("导出分析报告 (.txt)")
+        self.export_button = QToolButton()
+        self.export_button.setText("导出")
+        self.export_button.setPopupMode(
+            self.export_button.ToolButtonPopupMode.InstantPopup)
+        self.export_button.setToolButtonStyle(
+            Qt.ToolButtonStyle.ToolButtonTextOnly)
+        menu = QMenu(self.export_button)
+        for label, key in (
+            ("分析报告 (.txt)", "report"),
+            ("requirements.txt", "requirements"),
+            ("environment.yml", "yaml"),
+            ("依赖图 PNG", "png"),
+            ("依赖图 SVG", "svg"),
+            ("Graphviz DOT(仅问题边)", "dot"),
+            ("许可证汇总 (.txt)", "licenses"),
+        ):
+            action = menu.addAction(label)
+            action.triggered.connect(
+                lambda _checked=False, k=key: self._export_format(k))
+        self.export_button.setMenu(menu)
         export_row.addWidget(self.export_button)
         root.addLayout(export_row)
-        self.export_button.clicked.connect(self._export_report)
 
         self.busy = BusyOverlay(self)
 
@@ -173,6 +196,24 @@ class AnalysisPage(QWidget):
         self.conflict_table.setShowGrid(False)
         self.conflict_table.clicked.connect(self._on_conflict_clicked)
         layout.addWidget(self.conflict_table, 1)
+
+        # 冲突修复: 合并所有约束 → 生成 pip 表达式 → 可复制/可执行
+        actions = QHBoxLayout()
+        actions.setSpacing(8)
+        self.fix_hint = QLabel("")
+        self.fix_hint.setStyleSheet(
+            f"color: {Palette.text_muted}; font-size: 12px;")
+        actions.addWidget(self.fix_hint, 1)
+        self.copy_fix_btn = QPushButton("复制修复命令")
+        self.copy_fix_btn.setEnabled(False)
+        self.copy_fix_btn.clicked.connect(self._copy_fix_command)
+        actions.addWidget(self.copy_fix_btn)
+        self.apply_fix_btn = QPushButton("在目标环境执行修复")
+        self.apply_fix_btn.setProperty("variant", "primary")
+        self.apply_fix_btn.setEnabled(False)
+        self.apply_fix_btn.clicked.connect(self._apply_fix_command)
+        actions.addWidget(self.apply_fix_btn)
+        layout.addLayout(actions)
         self.tabs.addTab(page, "冲突清单")
 
     def _build_cycles_tab(self) -> None:
@@ -471,24 +512,82 @@ class AnalysisPage(QWidget):
     def _on_layout_changed(self) -> None:
         self._render_graph()
 
+    def _problems(self) -> list[DepEdge]:
+        assert self._analysis is not None
+        return (self._analysis.conflict_edges
+                + self._analysis.missing_edges
+                + self._analysis.unknown_edges)
+
     def _on_conflict_clicked(self, index) -> None:
         if self._analysis is None or not index.isValid():
             return
         row = index.row()
         # 行号与 problems 渲染顺序一一对应, 直接按行取边
         # (同一对包可能有多条不同约束的边, 按 key 匹配会取错)
-        problems = (
-            self._analysis.conflict_edges
-            + self._analysis.missing_edges
-            + self._analysis.unknown_edges
-        )
+        problems = self._problems()
         if row >= len(problems):
             return
         edge = problems[row]
+        self._selected_problem = edge
+        self._update_fix_hint(edge)
         self.tabs.setCurrentIndex(0)
         target = self.graph.controller.focus_edge(edge)
         if target:
             self.graph.center_on_node(target)
+
+    # -- 冲突修复 ---------------------------------------------------------
+    def _update_fix_hint(self, edge: DepEdge) -> None:
+        assert self._analysis is not None
+        expression, sources = suggest_constraint(self._analysis, edge.target_key)
+        if not expression:
+            self.fix_hint.setText("该问题没有可合并的版本约束(缺失/未知项), 无法自动修复")
+            self.copy_fix_btn.setEnabled(False)
+            self.apply_fix_btn.setEnabled(False)
+            return
+        self.fix_hint.setText(
+            f"合并 {len(sources)} 条约束 → {expression}")
+        self.copy_fix_btn.setEnabled(True)
+        self.apply_fix_btn.setEnabled(True)
+
+    def _fix_command(self) -> tuple[str, str]:
+        """返回 (python 路径, pip 安装表达式)。"""
+        if self._analysis is None or self._selected_problem is None:
+            return "", ""
+        expression, _ = suggest_constraint(
+            self._analysis, self._selected_problem.target_key)
+        python = self._analysis.snapshot.interpreter.path
+        return python, expression
+
+    def _copy_fix_command(self) -> None:
+        _python, expression = self._fix_command()
+        if not expression:
+            return
+        from PySide6.QtGui import QGuiApplication
+        command = f'python -m pip install "{expression}"'
+        QGuiApplication.clipboard().setText(command)
+        self.fix_hint.setText(f"已复制: {command}")
+
+    def _apply_fix_command(self) -> None:
+        python, expression = self._fix_command()
+        if not python or not expression:
+            return
+        command = f'python -m pip install "{expression}"'
+        box = QMessageBox(self)
+        box.setIcon(QMessageBox.Icon.Question)
+        box.setWindowTitle("确认执行修复")
+        box.setText("将在目标环境中执行以下命令:")
+        box.setInformativeText(command)
+        box.setDetailedText(
+            "执行前建议:\n"
+            "  · 确认目标环境中没有正在运行的程序\n"
+            "  · 该操作会改变已安装的包版本\n"
+            "  · 若所有约束无法同时满足, pip 会报错且不改变现有安装")
+        box.setStandardButtons(QMessageBox.StandardButton.Ok |
+                               QMessageBox.StandardButton.Cancel)
+        box.setDefaultButton(QMessageBox.StandardButton.Cancel)
+        if box.exec() != QMessageBox.StandardButton.Ok:
+            return
+        self.fix_requested.emit(python, expression)
 
     def _clear_focus(self) -> None:
         self.graph.clear_visual_state()
@@ -527,84 +626,97 @@ class AnalysisPage(QWidget):
     # ------------------------------------------------------------------
     # 导出
     # ------------------------------------------------------------------
-    def _export_report(self) -> None:
+    def _export_format(self, key: str) -> None:
+        """统一导出入口: 报告 / requirements / yaml / PNG / SVG / DOT / 许可证。"""
         if self._analysis is None:
             return
-        from PySide6.QtWidgets import QFileDialog
-        interp = self._analysis.snapshot.interpreter
-        default = f"依赖分析报告_{interp.version or 'env'}_{datetime.datetime.now():%Y%m%d_%H%M%S}.txt"
-        path, _ = QFileDialog.getSaveFileName(
-            self, "导出分析报告", default, "文本文件 (*.txt)")
+        snapshot = self._analysis.snapshot
+        stamp = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
+        version = snapshot.interpreter.version or "env"
+
+        if key in ("png", "svg"):
+            self._export_graph_image(key, f"依赖图_{version}_{stamp}")
+            return
+
+        if key == "report":
+            default, filt, writer = (
+                f"依赖分析报告_{version}_{stamp}.txt", "文本文件 (*.txt)", None)
+        elif key == "requirements":
+            default, filt, writer = (
+                f"requirements_{version}_{stamp}.txt", "文本文件 (*.txt)", None)
+        elif key == "yaml":
+            default, filt, writer = (
+                f"environment_{version}_{stamp}.yml", "YAML 文件 (*.yml *.yaml)", None)
+        elif key == "dot":
+            default, filt, writer = (
+                f"deps_{version}_{stamp}.dot", "Graphviz DOT (*.dot)", None)
+        elif key == "licenses":
+            default, filt, writer = (
+                f"许可证汇总_{version}_{stamp}.txt", "文本文件 (*.txt)", None)
+        else:
+            return
+
+        path, _ = QFileDialog.getSaveFileName(self, "导出", default, filt)
         if not path:
             return
-        text = self._build_report_text()
         try:
-            with open(path, "w", encoding="utf-8") as fh:
-                fh.write(text)
+            if key == "report":
+                exporter.export_report(self._analysis, path)
+            elif key == "requirements":
+                exporter.export_requirements(snapshot, path)
+            elif key == "yaml":
+                exporter.export_conda_yaml(
+                    snapshot, path, name=f"py{version.replace('.', '')}")
+            elif key == "dot":
+                exporter.export_dot(self._analysis, path, only_problems=True)
+            elif key == "licenses":
+                with open(path, "w", encoding="utf-8") as fh:
+                    fh.write(licenses.build_license_text(snapshot))
         except OSError as exc:
-            from PySide6.QtWidgets import QMessageBox
             QMessageBox.warning(self, "导出失败", f"无法写入文件: {exc}")
             return
-        from PySide6.QtWidgets import QMessageBox
-        QMessageBox.information(self, "导出成功", f"报告已保存到:\n{path}")
+        QMessageBox.information(self, "导出成功", f"文件已保存到:\n{path}")
 
-    def _build_report_text(self) -> str:
+    def _export_graph_image(self, fmt: str, base_name: str) -> None:
+        """把依赖图渲染为 PNG / SVG。"""
         assert self._analysis is not None
-        a = self._analysis
-        interp = a.snapshot.interpreter
-        stats = a.stats
-        lines = [
-            "=" * 64,
-            " PyEnv Inspector 依赖分析报告",
-            "=" * 64,
-            f"生成时间 : {datetime.datetime.now():%Y-%m-%d %H:%M:%S}",
-            f"解释器   : {interp.display_name}",
-            f"路径     : {interp.path}",
-            f"来源     : {interp.source_label}",
-            f"Python   : {a.snapshot.python_full_version}",
-            "-" * 64,
-            f"已安装包 : {stats['packages']}",
-            f"依赖关系 : {stats['edges']} 条",
-            f"版本冲突 : {stats['conflicts']} 条",
-            f"依赖缺失 : {stats['missing']} 条",
-            f"未知项   : {stats['unknown']} 条",
-            f"循环依赖 : {stats['cycles']} 组",
-            "",
-        ]
-        if a.conflict_edges:
-            lines.append("【版本冲突明细】")
-            for e in a.conflict_edges:
-                lines.append(
-                    f"  ✗ {e.source_display} 要求 {e.target_display} {e.spec},"
-                    f" 实际安装 {self._target_version(e)}")
-            lines.append("")
-        if a.missing_edges:
-            lines.append("【依赖缺失明细】")
-            for e in a.missing_edges:
-                lines.append(
-                    f"  ✗ {e.source_display} 需要 {e.target_display}"
-                    f" ({e.spec or '任意版本'}), 未安装")
-            lines.append("")
-        if a.unknown_edges:
-            lines.append("【未知项明细】")
-            for e in a.unknown_edges:
-                lines.append(f"  ? {e.source_display} → {e.target_display}: {e.message}")
-            lines.append("")
-        if a.cycles:
-            lines.append("【循环依赖】")
-            for i, cyc in enumerate(a.cycles, 1):
-                lines.append(f"  环 #{i}: {' → '.join(cyc)}")
-            lines.append("")
-        if a.warnings:
-            lines.append("【解析告警】")
-            for w in a.warnings:
-                lines.append(f"  ! {w}")
-        if not (a.conflict_edges or a.missing_edges
-                or a.unknown_edges or a.cycles):
-            lines.append("✔ 未发现依赖冲突、缺失、未知项与循环。")
-        elif a.unknown_edges and not (a.conflict_edges or a.missing_edges
-                                      or a.cycles):
-            lines.append(
-                f"⚠ 存在 {len(a.unknown_edges)} 条未知项依赖,"
-                "结论可能不完整, 请查看明细。")
-        return "\n".join(lines)
+        scene_rect = self.graph.sceneRect()
+        if scene_rect.isEmpty():
+            QMessageBox.information(self, "无内容", "依赖图为空, 无法导出。")
+            return
+        path, _ = QFileDialog.getSaveFileName(
+            self, "导出依赖图", f"{base_name}.{fmt}",
+            "PNG 图片 (*.png)" if fmt == "png" else "SVG 矢量图 (*.svg)")
+        if not path:
+            return
+        scene = self.graph.scene()
+        try:
+            if fmt == "png":
+                size = scene_rect.size().toSize()
+                # 留白 + 上限, 避免超大图内存暴涨
+                width = min(max(size.width() + 80, 640), 8000)
+                height = min(max(size.height() + 80, 480), 8000)
+                image = self.graph.render_to_image(width, height)
+                if not image.save(path, "PNG"):
+                    raise OSError("图片编码失败")
+            else:
+                from PySide6.QtSvg import QSvgGenerator
+                generator = QSvgGenerator()
+                generator.setFileName(path)
+                generator.setSize(scene_rect.size().toSize())
+                generator.setViewBox(scene_rect)
+                generator.setTitle("PyEnv Inspector 依赖图")
+                painter = QPainter(generator)
+                painter.setRenderHint(QPainter.Antialiasing)
+                scene.render(painter, scene_rect, scene_rect)
+                painter.end()
+        except ImportError:
+            QMessageBox.warning(
+                self, "缺少模块",
+                "当前构建不包含 QtSvg, 无法导出 SVG。请改用 PNG 或 DOT。")
+            return
+        except (OSError, RuntimeError) as exc:
+            QMessageBox.warning(self, "导出失败", str(exc))
+            return
+        QMessageBox.information(self, "导出成功", f"依赖图已保存到:\n{path}")
+

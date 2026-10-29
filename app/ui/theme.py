@@ -1,12 +1,87 @@
-"""现代化浅色主题(QSS)与色板。"""
+"""现代化主题(QSS)与色板 —— 支持浅色/深色两套。
+
+主题在**应用启动时**确定(``use_dark()`` 在创建任何窗口之前调用),
+因此各模块 ``Palette.xxx`` 的运行时读取都能拿到正确值;
+切换主题后提示用户重启生效(避免运行中重建全部控件的复杂度)。
+"""
 
 from __future__ import annotations
 
 from PySide6.QtGui import QFont, QColor
 
+_LIGHT = {
+    "bg": "#eef1f6",
+    "surface": "#ffffff",
+    "surface_alt": "#f6f8fb",
+    "border": "#e3e7ef",
+    "border_strong": "#c9d1e0",
+    "text": "#1f2533",
+    "text_muted": "#7a8499",
+    "text_faint": "#aab2c3",
+    "primary": "#3d6df2",
+    "primary_hover": "#2f5ae0",
+    "primary_soft": "#e8eefe",
+    "ok": "#18a058",
+    "ok_soft": "#e6f6ee",
+    "warn": "#e8850c",
+    "warn_soft": "#fdf2e2",
+    "error": "#dc3545",
+    "error_soft": "#fdebec",
+    "info": "#3d6df2",
+    "info_soft": "#e8eefe",
+    "neutral_soft": "#eef1f6",
+    "graph_bg": "#fafbfd",
+    "edge_normal": "#c4cbdb",
+    "edge_ok": "#8fc7a8",
+    "edge_conflict": "#e4404f",
+    "edge_missing": "#ef9f3c",
+    "node_normal_border": "#d4dae7",
+    "node_ghost_border": "#e8b478",
+    "tooltip_bg": "#2b3245",
+    "row_alt": "#f6f8fb",
+    "on_primary": "#ffffff",
+    "danger_text": "#c8303e",
+    "success_text": "#2f8f5b",
+}
+
+_DARK = {
+    "bg": "#12161f",
+    "surface": "#1a1f2b",
+    "surface_alt": "#232936",
+    "border": "#2a3140",
+    "border_strong": "#3a4354",
+    "text": "#e6e9f0",
+    "text_muted": "#98a1b3",
+    "text_faint": "#6b7488",
+    "primary": "#4f7cff",
+    "primary_hover": "#6b90ff",
+    "primary_soft": "#1e2a4a",
+    "ok": "#35c07a",
+    "ok_soft": "#16301f",
+    "warn": "#f0a13c",
+    "warn_soft": "#3a2a13",
+    "error": "#ff5c69",
+    "error_soft": "#3a1a1e",
+    "info": "#4f7cff",
+    "info_soft": "#1e2a4a",
+    "neutral_soft": "#232936",
+    "graph_bg": "#151a24",
+    "edge_normal": "#3d4657",
+    "edge_ok": "#3f7a5c",
+    "edge_conflict": "#ff5c69",
+    "edge_missing": "#f0a13c",
+    "node_normal_border": "#3a4354",
+    "node_ghost_border": "#a9762f",
+    "tooltip_bg": "#0d1119",
+    "row_alt": "#1f2532",
+    "on_primary": "#ffffff",
+    "danger_text": "#ff7b86",
+    "success_text": "#4fd08c",
+}
+
 
 class Palette:
-    """全局色板(浅色主题)。"""
+    """全局色板(浅色主题为默认值)。"""
 
     # 基础
     bg = "#eef1f6"          # 窗体背景
@@ -43,19 +118,45 @@ class Palette:
     node_normal_border = "#d4dae7"
     node_ghost_border = "#e8b478"
 
+    # 细节
+    tooltip_bg = "#2b3245"
+    row_alt = "#f6f8fb"
+    on_primary = "#ffffff"
+    danger_text = "#c8303e"
+    success_text = "#2f8f5b"
 
-STATUS_COLORS = {
-    "ok": (Palette.ok, Palette.ok_soft),
-    "warn": (Palette.warn, Palette.warn_soft),
-    "error": (Palette.error, Palette.error_soft),
-    "info": (Palette.info, Palette.info_soft),
-    "muted": (Palette.text_muted, Palette.neutral_soft),
-}
+    is_dark = False
+
+
+def use_dark(dark: bool) -> None:
+    """切换色板(必须在创建任何窗口之前调用)。"""
+    source = _DARK if dark else _LIGHT
+    for key, value in source.items():
+        setattr(Palette, key, value)
+    Palette.is_dark = bool(dark)
 
 
 def status_color(variant: str) -> str:
-    pair = STATUS_COLORS.get(variant, STATUS_COLORS["muted"])
-    return pair[0]
+    """语义色(动态读取, 支持主题切换)。"""
+    table = {
+        "ok": Palette.ok,
+        "warn": Palette.warn,
+        "error": Palette.error,
+        "info": Palette.info,
+        "muted": Palette.text_muted,
+    }
+    return table.get(variant, Palette.text_muted)
+
+
+def status_soft_color(variant: str) -> str:
+    table = {
+        "ok": Palette.ok_soft,
+        "warn": Palette.warn_soft,
+        "error": Palette.error_soft,
+        "info": Palette.info_soft,
+        "muted": Palette.neutral_soft,
+    }
+    return table.get(variant, Palette.neutral_soft)
 
 
 def qcolor(hexstr: str) -> QColor:
@@ -71,7 +172,7 @@ def build_qss() -> str:
 }}
 QMainWindow, QWidget#root {{ background: {p.bg}; }}
 QToolTip {{
-    background: #2b3245; color: #ffffff; border: none;
+    background: {p.tooltip_bg}; color: {p.text}; border: 1px solid {p.border_strong};
     padding: 6px 10px; border-radius: 6px; font-size: 12px;
 }}
 

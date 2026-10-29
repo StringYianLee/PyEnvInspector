@@ -120,14 +120,42 @@ def main() -> int:
     if grab_to("shot_9_conda_demo.png"):
         return 1
 
-    # 8) 环境管理页(演示数据: 解释器/conda 环境/包管理三 Tab)
+    # 8) 环境管理页(演示数据: 解释器/venv/conda 环境/包管理)
     win._goto_page(4)
     settle(400)
     if grab_to("shot_10_manage.png"):
         return 1
-    win.manage_page.tabs.setCurrentIndex(2)
+    win.manage_page.tabs.setCurrentIndex(1)   # venv Tab
     settle(150)
-    if grab_to("shot_11_packages_mgmt.png"):
+    if grab_to("shot_11_venv.png"):
+        return 1
+    win.manage_page.tabs.setCurrentIndex(3)   # 包管理 Tab
+    settle(150)
+    if grab_to("shot_12_packages_mgmt.png"):
+        return 1
+
+    # 9) 环境对比(用演示数据里的两个环境)
+    win._goto_page(5)
+    if win.compare_page.combo_a.count() >= 2:
+        a = win.compare_page.combo_a.itemData(0)
+        b = win.compare_page.combo_b.itemData(1)
+        win._on_compare_requested(a, b)
+        settle(700)
+    if grab_to("shot_13_compare.png"):
+        return 1
+
+    # 10) 诊断与报告
+    win._goto_page(6)
+    settle(300)
+    if grab_to("shot_14_reports.png"):
+        return 1
+    win.reports_page.tabs.setCurrentIndex(1)   # 许可证
+    settle(150)
+    if grab_to("shot_15_licenses.png"):
+        return 1
+    win.reports_page.tabs.setCurrentIndex(2)   # 历史变化
+    settle(150)
+    if grab_to("shot_16_history.png"):
         return 1
 
     print("SCREENSHOTS_OK:", OUT_DIR)

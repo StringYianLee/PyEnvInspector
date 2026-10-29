@@ -2,14 +2,20 @@
 
 from __future__ import annotations
 
+import threading
+
 from PySide6.QtCore import QThread, Signal
 
+from .core.analyzer import analyze
 from .core.conda_scanner import scan_conda
 from .core.collector import CollectionError, collect_packages
 from .core.env_manager import EnvManagerError
 from .core.layout import force_layout, hierarchical_layout
-from .core.models import AnalysisResult, CondaInfo, InterpreterInfo
+from .core.models import (
+    AnalysisResult, CondaInfo, EnvironmentSnapshot, InterpreterInfo,
+)
 from .core.scanner import ScanReport, scan_interpreters
+from .core.updater import check_latest
 
 
 class ScanWorker(QThread):
@@ -72,7 +78,7 @@ class ManageWorker(QThread):
 
 
 class CollectWorker(QThread):
-    """后台采集目标环境包列表。"""
+    """后台采集目标环境包列表(支持取消)。"""
 
     progress = Signal(str)
     done = Signal(object)     # EnvironmentSnapshot
@@ -81,10 +87,17 @@ class CollectWorker(QThread):
     def __init__(self, interpreter: InterpreterInfo, parent=None):
         super().__init__(parent)
         self.interpreter = interpreter
+        self._cancel = threading.Event()
+
+    def cancel(self) -> None:
+        """请求取消: 置位后采集循环会终止子进程并尽快退出。"""
+        self._cancel.set()
 
     def run(self) -> None:
         try:
-            snapshot = collect_packages(self.interpreter, progress=self.progress.emit)
+            snapshot = collect_packages(
+                self.interpreter, progress=self.progress.emit,
+                cancel_event=self._cancel)
         except CollectionError as exc:
             self.failed.emit(str(exc))
             return
@@ -92,6 +105,44 @@ class CollectWorker(QThread):
             self.failed.emit(f"{type(exc).__name__}: {exc}")
             return
         self.done.emit(snapshot)
+
+
+class AnalysisWorker(QThread):
+    """后台执行依赖分析(大环境可达数千条边, 不能占用 UI 线程)。"""
+
+    done = Signal(object)   # AnalysisResult
+    failed = Signal(str)
+
+    def __init__(self, snapshot: EnvironmentSnapshot, parent=None):
+        super().__init__(parent)
+        self.snapshot = snapshot
+
+    def run(self) -> None:
+        try:
+            result = analyze(self.snapshot)
+        except Exception as exc:
+            self.failed.emit(f"依赖分析失败: {type(exc).__name__}: {exc}")
+            return
+        self.done.emit(result)
+
+
+class UpdateCheckWorker(QThread):
+    """后台检查 GitHub 最新 Release(失败静默, 不影响主功能)。"""
+
+    done = Signal(object)   # UpdateResult
+
+    def __init__(self, current_version: str, parent=None):
+        super().__init__(parent)
+        self.current_version = current_version
+
+    def run(self) -> None:
+        try:
+            result = check_latest(self.current_version)
+        except Exception as exc:  # 兜底: 更新检查永不崩
+            from .core.updater import UpdateResult
+            result = UpdateResult(current=self.current_version,
+                                  error=f"{type(exc).__name__}: {exc}")
+        self.done.emit(result)
 
 
 class LayoutWorker(QThread):

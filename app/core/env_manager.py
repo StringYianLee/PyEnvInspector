@@ -108,8 +108,11 @@ def _save_registry(entries: list[dict]) -> None:
 
 
 def register_managed(env_dir: str, python_version: str,
-                     added_to_path: bool = False) -> None:
-    """把解释器写入登记表(同目录幂等覆盖)。"""
+                     added_to_path: bool = False, kind: str = "install") -> None:
+    """把环境写入登记表(同目录幂等覆盖)。
+
+    :param kind: "install"(独立安装的解释器) / "venv"(虚拟环境)
+    """
     env_dir = os.path.normpath(os.path.abspath(env_dir))
     entries = [e for e in _load_registry()
                if os.path.normcase(e.get("dir", "")) != os.path.normcase(env_dir)]
@@ -118,6 +121,7 @@ def register_managed(env_dir: str, python_version: str,
         "dir": env_dir,
         "python_version": python_version,
         "added_to_path": bool(added_to_path),
+        "kind": kind,
         "installed_at": datetime.datetime.now().isoformat(timespec="seconds"),
     })
     _save_registry(entries)
@@ -139,8 +143,30 @@ def _registry_entry_of(env_dir: str) -> dict | None:
 
 
 def _exe_of(env_dir: str) -> str:
-    return os.path.join(
-        env_dir, "python.exe" if os.name == "nt" else os.path.join("bin", "python"))
+    """解析环境内的解释器路径。
+
+    两种布局并存:
+      · 独立安装(python-build-standalone): <dir>/python.exe | <dir>/bin/python
+      · 虚拟环境(venv):                    <dir>/Scripts/python.exe | <dir>/bin/python
+    返回第一个真实存在的候选; 都不存在时返回「按目录类型推断」的路径
+    (供调用方做 isfile 判断)。
+    """
+    if os.name == "nt":
+        candidates = [
+            os.path.join(env_dir, "python.exe"),
+            os.path.join(env_dir, "Scripts", "python.exe"),
+        ]
+    else:
+        candidates = [
+            os.path.join(env_dir, "bin", "python"),
+            os.path.join(env_dir, "bin", "python3"),
+        ]
+    for candidate in candidates:
+        if os.path.isfile(candidate):
+            return candidate
+    if os.path.isfile(os.path.join(env_dir, "pyvenv.cfg")) and os.name == "nt":
+        return os.path.join(env_dir, "Scripts", "python.exe")
+    return candidates[0]
 
 
 def list_managed_interpreters() -> list[dict]:
@@ -162,6 +188,7 @@ def list_managed_interpreters() -> list[dict]:
             "version": e.get("python_version", os.path.basename(env_dir)),
             "installed_at": e.get("installed_at", ""),
             "added_to_path": bool(e.get("added_to_path")),
+            "kind": e.get("kind", "install"),
         })
     # 兼容: 旧版本只写 marker 不写登记表, 扫 runtimes 目录补齐
     runtimes = get_runtimes_dir()
@@ -184,8 +211,98 @@ def list_managed_interpreters() -> list[dict]:
                     "version": meta.get("python_version", name),
                     "installed_at": meta.get("installed_at", ""),
                     "added_to_path": False,
+                    "kind": "install",
                 })
     return result
+
+
+# ---------------------------------------------------------------------------
+# 虚拟环境(venv): 创建 / 删除
+#   与"安装解释器"不同, venv 复用基础解释器, 不下载任何东西, 秒级完成。
+# ---------------------------------------------------------------------------
+
+def is_venv(env_dir: str) -> bool:
+    """目录是否为一个 venv(存在 pyvenv.cfg)。"""
+    return os.path.isfile(os.path.join(env_dir, "pyvenv.cfg"))
+
+
+def create_venv(base_python: str, target_dir: str,
+                with_pip: bool = True, on_output=None) -> str:
+    """用指定解释器创建 venv。
+
+    :param base_python: 基础解释器路径(venv 继承其版本)
+    :param target_dir:  新环境目录(必须是绝对路径且不存在或为空)
+    :param with_pip:    是否安装 pip(默认安装)
+    :return: 环境目录
+    """
+    if on_output is None:
+        on_output = lambda msg: None
+    if not os.path.isfile(base_python):
+        raise EnvManagerError(f"基础解释器不存在: {base_python}")
+    target_dir = os.path.normpath(os.path.abspath(os.path.expanduser(target_dir)))
+    drive, _ = os.path.splitdrive(target_dir)
+    if not drive:
+        raise EnvManagerError(f"环境路径必须是本机绝对路径: {target_dir!r}")
+    if os.path.isfile(target_dir):
+        raise EnvManagerError(f"目标路径是文件, 无法创建环境: {target_dir}")
+    if os.path.isdir(target_dir):
+        try:
+            if any(os.scandir(target_dir)):
+                raise EnvManagerError(f"目标目录非空, 请选择空目录: {target_dir}")
+        except OSError as exc:
+            raise EnvManagerError(f"无法访问目标目录: {exc}") from exc
+
+    cmd = [base_python, "-m", "venv", target_dir]
+    if not with_pip:
+        cmd.append("--without-pip")
+    on_output(f"$ {' '.join(cmd)}")
+    code, out = run_streaming(cmd, on_output)
+    if code != 0:
+        raise EnvManagerError(
+            f"venv 创建失败 (退出码 {code}):\n"
+            + translate_error("venv", "create", out))
+
+    exe = _exe_of(target_dir)
+    if not os.path.isfile(exe):
+        raise EnvManagerError(f"创建过程异常: 未生成解释器 {exe}")
+
+    version = ""
+    if with_pip:
+        code, out = run_streaming([exe, "-c",
+                                   "import platform; print(platform.python_version())"])
+        if code == 0 and out.strip():
+            version = out.strip().splitlines()[-1]
+    register_managed(target_dir, version or "venv", kind="venv")
+    on_output(f"✔ 虚拟环境已创建: {target_dir}"
+              + (f" (Python {version})" if version else ""))
+    return target_dir
+
+
+def remove_venv(env_dir: str, on_output=None) -> None:
+    """删除 venv(占用检测 + pyvenv.cfg 校验, 永不作用于系统解释器)。"""
+    if on_output is None:
+        on_output = lambda msg: None
+    env_dir = os.path.normpath(os.path.abspath(env_dir))
+    if not is_venv(env_dir):
+        raise EnvManagerError(
+            "目标目录不是虚拟环境(缺少 pyvenv.cfg), 为安全起见拒绝删除。\n"
+            f"路径: {env_dir}")
+    blockers = find_processes_using_dir(env_dir)
+    if blockers:
+        detail = "\n".join(f"  PID {pid}  {name}" for pid, name, _ in blockers)
+        raise EnvManagerError(
+            f"该虚拟环境正被以下进程占用, 请先关闭后重试:\n{detail}")
+    entry = _registry_entry_of(env_dir)
+    if entry and entry.get("added_to_path"):
+        try:
+            if remove_from_user_path([env_dir, os.path.join(env_dir, "Scripts")]):
+                on_output("已从用户 Path 中移除该环境目录")
+        except Exception as exc:
+            on_output(f"警告: 从 Path 移除失败({exc})")
+    on_output("正在删除虚拟环境目录…")
+    shutil.rmtree(env_dir)
+    unregister_managed(env_dir)
+    on_output(f"✔ 已删除: {env_dir}")
 
 
 def _write_marker(env_dir: str, python_version: str) -> None:

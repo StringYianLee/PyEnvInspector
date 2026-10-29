@@ -89,6 +89,19 @@ def build_demo_snapshot() -> EnvironmentSnapshot:
         InstalledPackage("weird-version", "final", []),               # 非法版本
         InstalledPackage("needs-weird", "1.0", ["weird-version>1"]),  # → 未知项
     ]
+    # 演示许可证元数据(真实采集时来自 METADATA License 字段)
+    demo_licenses = {
+        "numpy": "BSD-3-Clause", "pandas": "BSD-3-Clause",
+        "scipy": "BSD-3-Clause", "requests": "Apache-2.0",
+        "urllib3": "MIT", "idna": "BSD-3-Clause",
+        "certifi": "MPL-2.0", "charset-normalizer": "MIT",
+        "pytz": "MIT", "python-dateutil": "Apache-2.0",
+        "six": "MIT", "tzdata": "Apache-2.0",
+        "pip": "MIT", "setuptools": "MIT", "wheel": "MIT",
+        "old-ml-lib": "GPL-3.0", "web-framework": "MIT",
+    }
+    for pkg in packages:
+        pkg.license_text = demo_licenses.get(pkg.name.lower(), "")
     return EnvironmentSnapshot(
         interpreter=interp,
         python_version="3.12",

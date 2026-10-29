@@ -243,3 +243,35 @@ def _build_edge(
             message=f"要求 {spec_str}, 实际安装 {installed_version}",
         )
     return DepEdge(**base), warning
+
+
+# ---------------------------------------------------------------------------
+# 冲突修复建议
+# ---------------------------------------------------------------------------
+
+def suggest_constraint(result: AnalysisResult, target_key: str
+                       ) -> tuple[str, list[str]]:
+    """为"被多个包同时约束"的包生成合并约束建议。
+
+    例如 numpy 被 A 要求 ``<1.20``、B 要求 ``>=1.19``,
+    返回 ("numpy<1.20,>=1.19", ["A: <1.20", "B: >=1.19"])。
+
+    :return: (pip 安装表达式, 每条约束的来源说明)
+    """
+    pkg = result.packages.get(target_key)
+    display = pkg.name if pkg is not None else target_key
+    parts: list[str] = []
+    sources: list[str] = []
+    for edge in result.edges:
+        if edge.target_key != target_key or not edge.spec:
+            continue
+        spec = edge.spec.strip()
+        if not spec or spec[0] not in "<>=!~":
+            continue
+        if spec in parts:
+            continue
+        parts.append(spec)
+        sources.append(f"{edge.source_display}: {spec}")
+    if not parts:
+        return "", sources
+    return f"{display}{','.join(parts)}", sources

@@ -59,6 +59,7 @@ class ManagePage(QWidget):
         # Tab 区
         self.tabs = QTabWidget()
         self._build_interpreter_tab()
+        self._build_venv_tab()
         self._build_conda_tab()
         self._build_packages_tab()
         root.addWidget(self.tabs, 1)
@@ -176,6 +177,74 @@ class ManagePage(QWidget):
             self, "选择安装目录", current or os.path.expanduser("~"))
         if chosen:
             self.py_dir_edit.setText(chosen)
+
+    def _build_venv_tab(self) -> None:
+        page = QWidget()
+        layout = QVBoxLayout(page)
+        layout.setContentsMargins(0, 8, 0, 0)
+        layout.setSpacing(10)
+
+        hint = QLabel(
+            "虚拟环境复用已安装的解释器, 秒级创建且无需下载; "
+            "创建后会自动出现在「解释器」页与包管理目标中。删除仅作用于 "
+            "venv 目录(校验 pyvenv.cfg), 不会影响基础解释器。")
+        hint.setWordWrap(True)
+        hint.setStyleSheet(f"color: {Palette.text_muted}; font-size: 12px;")
+        layout.addWidget(hint)
+
+        row = QHBoxLayout()
+        row.setSpacing(10)
+        row.addWidget(QLabel("基础解释器:"))
+        self.venv_base_combo = QComboBox()
+        self.venv_base_combo.setMinimumWidth(260)
+        row.addWidget(self.venv_base_combo, 1)
+        self.venv_pip_check = QCheckBox("安装 pip")
+        self.venv_pip_check.setChecked(True)
+        row.addWidget(self.venv_pip_check)
+        self.venv_create_btn = QPushButton("创建环境")
+        self.venv_create_btn.setProperty("variant", "primary")
+        self.venv_create_btn.clicked.connect(self._create_venv)
+        row.addWidget(self.venv_create_btn)
+        row.addSpacing(12)
+        self.venv_remove_btn = QPushButton("删除所选")
+        self.venv_remove_btn.setEnabled(False)
+        self.venv_remove_btn.clicked.connect(self._remove_venv)
+        row.addWidget(self.venv_remove_btn)
+        layout.addLayout(row)
+
+        row2 = QHBoxLayout()
+        row2.setSpacing(10)
+        row2.addWidget(QLabel("环境路径:"))
+        self.venv_dir_edit = QLineEdit()
+        self.venv_dir_edit.setPlaceholderText(
+            "留空 = ~/PyEnvInspector/venvs/venv-<时间戳>, 也可指定任意空目录")
+        row2.addWidget(self.venv_dir_edit, 1)
+        browse = QPushButton("浏览…")
+        browse.setFixedHeight(30)
+        browse.clicked.connect(self._browse_venv_dir)
+        row2.addWidget(browse)
+        layout.addLayout(row2)
+
+        self.venv_table = QTableWidget(0, 3)
+        self.venv_table.setHorizontalHeaderLabels(["Python 版本", "环境目录", "创建时间"])
+        self.venv_table.verticalHeader().setVisible(False)
+        self.venv_table.setEditTriggers(QTableWidget.EditTrigger.NoEditTriggers)
+        self.venv_table.setSelectionBehavior(
+            QTableWidget.SelectionBehavior.SelectRows)
+        self.venv_table.setSelectionMode(QTableWidget.SelectionMode.SingleSelection)
+        self.venv_table.setAlternatingRowColors(True)
+        self.venv_table.setShowGrid(False)
+        self.venv_table.verticalHeader().setDefaultSectionSize(30)
+        header = self.venv_table.horizontalHeader()
+        header.setSectionResizeMode(0, QHeaderView.ResizeMode.ResizeToContents)
+        header.setSectionResizeMode(1, QHeaderView.ResizeMode.Stretch)
+        header.setSectionResizeMode(2, QHeaderView.ResizeMode.ResizeToContents)
+        self.venv_table.itemSelectionChanged.connect(
+            lambda: self.venv_remove_btn.setEnabled(
+                bool(self.venv_table.selectedItems())))
+        layout.addWidget(self.venv_table, 1)
+
+        self.tabs.addTab(page, "虚拟环境 (venv)")
 
     def _build_conda_tab(self) -> None:
         page = QWidget()
@@ -320,15 +389,18 @@ class ManagePage(QWidget):
         self._interpreters = interpreters
         self._conda_info = conda_info
         self._reload_py_table()
+        self._reload_venv_table()
         self._reload_env_table()
         self._fill_targets()
+        self._fill_venv_bases()
 
     def set_current_env_dir(self, env_dir: str) -> None:
         """主窗口告知当前浏览的环境目录(删除保护)。"""
         self._current_env_dir = env_dir or ""
 
     def _reload_py_table(self) -> None:
-        managed = em.list_managed_interpreters()
+        managed = [m for m in em.list_managed_interpreters()
+                   if m.get("kind", "install") == "install"]
         self.py_table.setRowCount(len(managed))
         for row, item in enumerate(managed):
             self.py_table.setItem(
@@ -343,6 +415,102 @@ class ManagePage(QWidget):
             if item.get("added_to_path"):
                 path_flag.setForeground(QColor("#2f8f5b"))
             self.py_table.setItem(row, 3, path_flag)
+
+    def _fill_venv_bases(self) -> None:
+        """基础解释器候选 = 扫描到的解释器 + 托管安装(去重)。"""
+        combos = self.venv_base_combo
+        previous = combos.currentData()
+        combos.clear()
+        seen: set[str] = set()
+        for info in self._interpreters:
+            key = os.path.normcase(info.path)
+            if key in seen:
+                continue
+            seen.add(key)
+            combos.addItem(
+                f"Python {info.version} · {info.source_label} · {info.path}",
+                info.path)
+        for item in em.list_managed_interpreters():
+            key = os.path.normcase(item["python_exe"])
+            if key in seen:
+                continue
+            seen.add(key)
+            combos.addItem(
+                f"Python {item['version']} · 托管安装 · {item['dir']}",
+                item["python_exe"])
+        if previous:
+            idx = combos.findData(previous)
+            if idx >= 0:
+                combos.setCurrentIndex(idx)
+
+    def _reload_venv_table(self) -> None:
+        venvs = [m for m in em.list_managed_interpreters()
+                 if m.get("kind") == "venv"]
+        self.venv_table.setRowCount(len(venvs))
+        for row, item in enumerate(venvs):
+            self.venv_table.setItem(
+                row, 0, QTableWidgetItem(item.get("version") or "—"))
+            dir_item = QTableWidgetItem(item["dir"])
+            dir_item.setForeground(QColor(Palette.text_muted))
+            self.venv_table.setItem(row, 1, dir_item)
+            self.venv_table.setItem(
+                row, 2, QTableWidgetItem(item.get("installed_at") or "—"))
+
+    def _browse_venv_dir(self) -> None:
+        from PySide6.QtWidgets import QFileDialog
+        path = QFileDialog.getExistingDirectory(self, "选择虚拟环境目录")
+        if path:
+            self.venv_dir_edit.setText(path)
+
+    def _create_venv(self) -> None:
+        base = self.venv_base_combo.currentData()
+        if not base:
+            QMessageBox.warning(self, "缺少解释器",
+                                "未找到可用解释器, 请先在「解释器」页扫描。")
+            return
+        target = self.venv_dir_edit.text().strip()
+        if not target:
+            import datetime
+            stamp = datetime.datetime.now().strftime("%Y%m%d-%H%M%S")
+            target = os.path.join(em.get_managed_root(), "venvs",
+                                  f"venv-{stamp}")
+        self._start_op(
+            f"创建虚拟环境 {os.path.basename(target)}",
+            em.create_venv, base, target, self.venv_pip_check.isChecked(),
+            after="interpreters",
+            message=f"虚拟环境已创建: {target}\n现在可以在「解释器」页选择它。",
+            result_text=f"环境路径: {target}")
+
+    def _remove_venv(self) -> None:
+        row = self.venv_table.currentRow()
+        if row < 0:
+            return
+        venvs = [m for m in em.list_managed_interpreters()
+                 if m.get("kind") == "venv"]
+        if row >= len(venvs):
+            return
+        item = venvs[row]
+        if os.path.normcase(item["dir"]) == os.path.normcase(
+                self._current_env_dir or ""):
+            QMessageBox.warning(
+                self, "无法删除",
+                "该虚拟环境正在被当前浏览的环境使用, 请先切换到其它环境。")
+            return
+        box = QMessageBox(self)
+        box.setIcon(QMessageBox.Icon.Warning)
+        box.setWindowTitle("确认删除虚拟环境")
+        box.setText(f"确定要删除该虚拟环境吗?\n\n{item['dir']}\n\n"
+                    "只删除该环境目录, 基础解释器不受影响。该操作不可恢复!")
+        box.setStandardButtons(QMessageBox.StandardButton.Yes |
+                               QMessageBox.StandardButton.No)
+        box.setDefaultButton(QMessageBox.StandardButton.No)
+        if box.exec() != QMessageBox.StandardButton.Yes:
+            return
+        self._start_op(f"删除虚拟环境 {os.path.basename(item['dir'])}",
+                       em.remove_venv, item["dir"],
+                       after="interpreters",
+                       message="虚拟环境已删除。",
+                       result_text=f"已删除: {item['dir']}")
 
     def _reload_env_table(self) -> None:
         envs = self._conda_info.envs if self._conda_info else []
@@ -437,6 +605,7 @@ class ManagePage(QWidget):
     def _set_busy(self, on: bool, title: str = "") -> None:
         self.busy.set_state(on, title)
         for w in (self.py_install_btn, self.py_remove_btn,
+                  self.venv_create_btn, self.venv_remove_btn,
                   self.env_create_btn, self.env_remove_btn,
                   self.pip_install_btn, self.pip_uninstall_btn,
                   self.conda_install_btn, self.conda_remove_btn):
@@ -445,6 +614,7 @@ class ManagePage(QWidget):
             # 恢复条件化禁用状态(如 conda 未检测到)
             self._reload_env_table()
             self._reload_py_table()
+            self._reload_venv_table()
 
     def _on_op_success(self, payload: dict) -> None:
         self._worker = None
@@ -468,11 +638,23 @@ class ManagePage(QWidget):
     def _refresh_related(self, after: str) -> None:
         if after == "interpreters":
             self._reload_py_table()
+            self._reload_venv_table()
+            self._fill_venv_bases()
             self.python_changed.emit()
         elif after == "conda":
             self.conda_changed.emit()
         elif after.startswith("packages:"):
             self.packages_changed.emit(after.split(":", 1)[1])
+
+    def run_pip_install(self, python_exe: str, spec: str,
+                        index_label: str = "官方") -> None:
+        """供其它页面调用: 在指定环境执行 pip install(显示在操作日志)。"""
+        self.tabs.setCurrentIndex(3)   # 包管理 Tab
+        self._start_op(f"pip 安装 {spec}", em.pip_install,
+                       python_exe, spec, index_label,
+                       after=f"packages:{python_exe}",
+                       message=f"pip 安装已完成: {spec}",
+                       result_text=f"目标: {python_exe}\n包: {spec}")
 
     # ------------------------------------------------------------------
     # 具体操作
