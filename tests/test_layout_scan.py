@@ -108,30 +108,16 @@ def test_demo_snapshot_has_expected_problems():
 
 
 def test_probe_real_interpreter():
-    """对本机 managed Python 做真实探测。"""
-    candidates = [
-        r"C:\Users\Liyian\.workbuddy\binaries\python\versions\3.13.12\python.exe",
-        r"C:\Python314\python.exe",
-    ]
-    probed = 0
-    for path in candidates:
-        if not os.path.isfile(path):
-            continue
-        info = probe_interpreter(path, "common")
-        assert not info.probe_error, f"探测失败: {info.probe_error}"
-        assert info.version.startswith("3.")
-        assert info.implementation == "cpython"
-        probed += 1
-    assert probed >= 1, "本机应至少有一个可探测的 Python"
+    """对当前解释器做真实探测(环境无关, 可在 CI 运行)。"""
+    info = probe_interpreter(sys.executable, "common")
+    assert not info.probe_error, f"探测失败: {info.probe_error}"
+    assert info.version.startswith("3.")
+    assert info.implementation == "cpython"
 
 
 def test_collect_real_environment():
-    """对真实解释器采集包元数据(venv 内含 PySide6/packaging/pytest)。"""
-    path = r"C:\Users\Liyian\.workbuddy\binaries\python\envs\default\Scripts\python.exe"
-    if not os.path.isfile(path):
-        path = r"C:\Users\Liyian\.workbuddy\binaries\python\versions\3.13.12\python.exe"
-    assert os.path.isfile(path), "找不到可用的测试解释器"
-    snap = collect_packages(InterpreterInfo(path=path, version="3.13"))
+    """对当前解释器采集包元数据(requirements 已安装即可, CI 可跑)。"""
+    snap = collect_packages(InterpreterInfo(path=sys.executable, version="3"))
     names = {p.name.lower() for p in snap.packages}
     assert "pyside6" in names, f"应采集到 PySide6, 实际: {sorted(names)[:20]}"
     assert "packaging" in names
