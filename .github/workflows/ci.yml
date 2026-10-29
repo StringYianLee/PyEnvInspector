@@ -128,3 +128,13 @@ jobs:
           files: build/*.msi
           draft: false
           prerelease: false
+
+      # action-gh-release 对"已存在的 Release"不覆盖描述, 显式再设一次
+      - name: 强制同步发布说明
+        shell: pwsh
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release edit "${{ github.ref_name }}" --notes-file build/release_notes.md
+          if ($LASTEXITCODE -ne 0) { throw "gh release edit 失败" }
+          gh release view "${{ github.ref_name }}" --json body --jq '.body | length'
