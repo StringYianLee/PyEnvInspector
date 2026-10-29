@@ -186,6 +186,7 @@ class MainWindow(QMainWindow):
         self._update_text = ""
         self._analysis_purpose = "normal"   # normal | reports
         self._reports_pending: str | None = None
+        self._reports_loading: str | None = None   # 诊断页正在加载的环境
 
         self._build_ui()
         self._restore_settings()
@@ -661,6 +662,9 @@ class MainWindow(QMainWindow):
             self._compare_need.clear()
             self.compare_page.set_busy(False, f"采集失败: {message}")
             return
+        if self._reports_loading:
+            self._reports_loading = None
+            self.reports_page._subtitle.setText(f"诊断失败: {message}")
         QMessageBox.warning(self, "包信息采集失败", message)
 
     # ------------------------------------------------------------------
@@ -708,6 +712,7 @@ class MainWindow(QMainWindow):
         if self._analysis_purpose == "reports":
             # 从诊断页发起: 停留原页面, 仅刷新报告
             self._analysis_purpose = "normal"
+            self._reports_loading = None
             self._goto_page(PAGE_REPORTS)
             return
         self._analysis_purpose = "normal"
@@ -725,8 +730,10 @@ class MainWindow(QMainWindow):
             result = self._current_result()
         snapshot = self._snapshot
         reports = self.reports_page
-        reports.set_interpreters(self._interpreters,
-                                 current_path=snapshot.interpreter.path)
+        # 保留用户在诊断页的选择; 首次进入时才回落到当前环境
+        reports.set_interpreters(
+            self._interpreters,
+            current_path=reports.selected_path() or snapshot.interpreter.path)
         reports.set_snapshot(snapshot)
         diag = diag_mod.run_diagnostics(snapshot, result, self._interpreters)
         reports.show_diagnostics(diag, result)
@@ -739,25 +746,35 @@ class MainWindow(QMainWindow):
 
     # -- 诊断页: 选定解释器 / 一键修复 ------------------------------------
     def _on_reports_interpreter(self, path: str) -> None:
-        """诊断页切换目标解释器 → 加载(必要时采集)并诊断该环境。"""
+        """诊断页切换目标解释器 → 加载(必要时采集)并诊断该环境。
+
+        重入保护: 同一次选择可能触发多条链路(下拉信号 / 分析完成回调),
+        若不加锁会重复起线程甚至递归。
+        """
         if not path:
             return
+        key = os.path.normcase(path)
+        if self._reports_loading == key:
+            return
+        self._reports_loading = key
+
         snapshot = self._snapshots.get(path) or cache.load_snapshot(path)
         if snapshot is not None:
             self._snapshots[path] = snapshot
             if self._snapshot is not None and os.path.normcase(
-                    self._snapshot.interpreter.path) == os.path.normcase(path):
+                    self._snapshot.interpreter.path) == key:
                 # 已是当前环境: 直接刷报告, 不重复分析
+                self._reports_loading = None
                 self._refresh_reports()
                 return
             self._apply_snapshot(snapshot, purpose="reports")
             return
         if self._collect_worker is not None and self._collect_worker.isRunning():
+            self._reports_loading = None
             self.statusBar().showMessage("正在采集其它环境, 请稍候…")
             return
         info = next((i for i in self._interpreters
-                     if os.path.normcase(i.path) == os.path.normcase(path)),
-                    None)
+                     if os.path.normcase(i.path) == key), None)
         if info is None:
             info = InterpreterInfo(path=path, source="path")
         self._reports_pending = path

@@ -26,6 +26,7 @@ import re
 import shutil
 import subprocess
 
+from .subproc import hidden_kwargs
 from .models import (
     CondaConfigFile,
     CondaEnvironment,
@@ -189,7 +190,8 @@ def _conda_version(executable: str) -> str:
     try:
         proc = subprocess.run(
             [executable, "--version"], capture_output=True, text=True,
-            encoding="utf-8", errors="replace", timeout=_CONDA_VERSION_TIMEOUT,
+            encoding="utf-8", errors="replace",
+            timeout=_CONDA_VERSION_TIMEOUT, **hidden_kwargs(),
         )
     except (OSError, subprocess.TimeoutExpired):
         return ""

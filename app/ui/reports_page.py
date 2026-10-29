@@ -89,6 +89,7 @@ class ReportsPage(QWidget):
         self._history: list[dict] = []
         self._analysis = None
         self._fix_expressions: list[str] = []
+        self._populating = False          # 程序化填充下拉时抑制信号回调
 
         root = QVBoxLayout(self)
         root.setContentsMargins(28, 24, 28, 16)
@@ -141,26 +142,37 @@ class ReportsPage(QWidget):
     # 目标环境选择 / 一键修复
     # ------------------------------------------------------------------
     def set_interpreters(self, interpreters, current_path: str = "") -> None:
-        """填充目标解释器下拉(保留当前选择)。"""
+        """填充目标解释器下拉(保留当前选择)。
+
+        注意: 恢复选中项也必须在 blockSignals 生效期间完成 ——
+        否则 setCurrentIndex 会触发 currentIndexChanged → 通知主窗口加载
+        → 刷新报告 → 再次调用本方法, 形成无限递归(表现为闪退/卡死)。
+        """
         previous = current_path or self.interp_combo.currentData()
+        self._populating = True
         self.interp_combo.blockSignals(True)
-        self.interp_combo.clear()
-        for info in interpreters:
-            label = f"Python {info.version} · {info.source_label}"
-            if info.env_name:
-                label += f" · {info.env_name}"
-            label += f" · {info.path}"
-            self.interp_combo.addItem(label, info.path)
-        self.interp_combo.blockSignals(False)
-        if previous:
-            idx = self.interp_combo.findData(previous)
-            if idx >= 0:
-                self.interp_combo.setCurrentIndex(idx)
+        try:
+            self.interp_combo.clear()
+            for info in interpreters:
+                label = f"Python {info.version} · {info.source_label}"
+                if info.env_name:
+                    label += f" · {info.env_name}"
+                label += f" · {info.path}"
+                self.interp_combo.addItem(label, info.path)
+            if previous:
+                idx = self.interp_combo.findData(previous)
+                if idx >= 0:
+                    self.interp_combo.setCurrentIndex(idx)
+        finally:
+            self.interp_combo.blockSignals(False)
+            self._populating = False
 
     def selected_path(self) -> str:
         return self.interp_combo.currentData() or ""
 
     def _on_interp_changed(self, _index: int) -> None:
+        if self._populating:
+            return          # 程序化填充/恢复, 不是用户切换
         self.fix_all_btn.setEnabled(False)
         self._fix_expressions = []
         self._emit_selected()

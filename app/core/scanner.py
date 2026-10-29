@@ -28,6 +28,7 @@ import subprocess
 from dataclasses import dataclass, field
 
 from .models import InterpreterInfo
+from .subproc import hidden_kwargs
 
 # 实际启动解释器执行的探测脚本(纯 ASCII 输出, 无编码问题)
 PROBE_SCRIPT = (
@@ -102,6 +103,7 @@ def scan_interpreters(progress=None) -> ScanReport:
             proc = subprocess.run(
                 [py, "--list-paths"], capture_output=True, text=True,
                 encoding="utf-8", errors="replace", timeout=20,
+                **hidden_kwargs(),
             )
             if proc.returncode == 0:
                 for line in proc.stdout.splitlines():
@@ -227,12 +229,14 @@ def probe_interpreter(
         proc = subprocess.run(
             argv, capture_output=True, text=True,
             encoding="utf-8", errors="replace", timeout=PROBE_TIMEOUT,
+            **hidden_kwargs(),
         )
         if proc.returncode != 0:
             # 老版本可能不支持 -I, 退回普通模式再试一次
             proc = subprocess.run(
                 [path, "-c", PROBE_SCRIPT], capture_output=True, text=True,
                 encoding="utf-8", errors="replace", timeout=PROBE_TIMEOUT,
+                **hidden_kwargs(),
             )
     except subprocess.TimeoutExpired:
         info.probe_error = "启动超时"

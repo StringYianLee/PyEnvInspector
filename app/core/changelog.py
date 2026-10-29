@@ -8,6 +8,14 @@ from __future__ import annotations
 
 CHANGELOG: list[dict] = [
     {
+        "version": "1.3.1",
+        "date": "2026-10-29",
+        "highlights": [
+            "修复打开软件后反复弹出 cmd 黑框: 全部子进程隐藏控制台窗口",
+            "修复诊断页切换目标解释器导致闪退/卡死(下拉刷新触发无限递归)",
+        ],
+    },
+    {
         "version": "1.3.0",
         "date": "2026-10-29",
         "highlights": [

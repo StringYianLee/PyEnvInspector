@@ -28,6 +28,8 @@ import tempfile
 import urllib.error
 import urllib.request
 
+from .subproc import hidden_kwargs
+
 # ---------------------------------------------------------------------------
 # 常量
 # ---------------------------------------------------------------------------
@@ -670,7 +672,7 @@ def run_streaming(cmd: list[str], on_output=None, timeout: int = 1800,
         cmd, stdout=subprocess.PIPE, stderr=subprocess.STDOUT,
         text=True, encoding="utf-8", errors="replace",
         bufsize=1, cwd=cwd,
-        creationflags=subprocess.CREATE_NO_WINDOW if os.name == "nt" else 0,
+        **hidden_kwargs(),
     )
     lines: _queue.Queue = _queue.Queue()
     assert proc.stdout is not None

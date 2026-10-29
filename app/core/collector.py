@@ -19,6 +19,7 @@ import subprocess
 import tempfile
 import threading
 
+from .subproc import hidden_kwargs
 from .models import EnvironmentSnapshot, InstalledPackage, InterpreterInfo
 
 RESULT_MARKER = "COLLECT_OK"
@@ -166,7 +167,7 @@ def collect_packages(
         proc = subprocess.Popen(
             argv, stdout=subprocess.PIPE, stderr=subprocess.PIPE,
             text=True, encoding="utf-8", errors="replace",
-            creationflags=(subprocess.CREATE_NO_WINDOW if os.name == "nt" else 0),
+            **hidden_kwargs(),
         )
     except OSError as exc:
         _safe_remove(out_path)
